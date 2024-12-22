@@ -16,16 +16,16 @@
    <!-- Navigation Tabs -->
     <ul class="nav nav-tabs justify-content-center mb-4" id="nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="true" onclick="sendTabRequest(1)">Vue Globale</button>
+            <button class="nav-link active" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="true" onclick="WebSocketManager.sendTabRequest(1)">Vue Globale</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="gyro-tab" data-bs-toggle="tab" data-bs-target="#gyro" type="button" role="tab" aria-controls="gyro" aria-selected="false" onclick="sendTabRequest(2)">Gyroscopes</button>
+            <button class="nav-link" id="gyro-tab" data-bs-toggle="tab" data-bs-target="#gyro" type="button" role="tab" aria-controls="gyro" aria-selected="false" onclick="WebSocketManager.sendTabRequest(2)">Gyroscopes</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="sim-tab" data-bs-toggle="tab" data-bs-target="#sim" type="button" role="tab" aria-controls="sim" aria-selected="false" onclick="sendTabRequest(3)">Simulation</button>
+            <button class="nav-link" id="sim-tab" data-bs-toggle="tab" data-bs-target="#sim" type="button" role="tab" aria-controls="sim" aria-selected="false" onclick="WebSocketManager.sendTabRequest(3)">Simulation</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="false" onclick="sendTabRequest(4)">Forçage</button>
+            <button class="nav-link" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="false" onclick="WebSocketManager.sendTabRequest(4)">Forçage</button>
         </li>
     </ul>
 
@@ -157,15 +157,7 @@
 /*
     const status = document.getElementById("status");
     const loader = document.getElementById("loader");
-    let ws;
-    let targetIP = ""; // IP de l'ESP détectée
-    let scanIndex = 0; // Index pour reprendre le scan
-    let maxScanAttempts = 5; // Nombre d'essais avant de passer au scan
-    let wsReconnectAttempts = 0; // Nombre d'essais de reconnexion WebSocket
-    let heartbeatTimeout; // Timeout pour le heartbeat
-    let silentTimeout; // Timeout pour espacer les tests en cas de silence
-    let silentCheckInterval = 10000; // Vérification toutes les 10 secondes en cas de silence
-    const connectionTimeout = 5000; // Timeout temporairement augmenté pour diagnostic
+    
     
     const infoDiv = document.getElementById('info');
     function displayInfo(data) {
@@ -212,16 +204,7 @@
             return `${secs}s`;
         }
     }
-//////////////////////////////////////////////////////////////////////
-    function sendTabRequest(tabIndex) {
-        const tabRequest = { type: "mod", mod_req: tabIndex };
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify(tabRequest));
-            console.log("Tab request sent:", tabRequest);
-        } else {
-            console.warn("WebSocket not connected");
-        }
-    }
+
 ////////////////////////////////////////////////////////////////////////
     const svg = document.querySelector("svg");
         const billeLayer = svg.getElementById("layer3"); // Calque "bille"
@@ -413,6 +396,7 @@
 
 <script src="https://flo3376.github.io/traxxas_3/web/js/websocket.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/gauge.js"></script>
+<script src="https://flo3376.github.io/traxxas_3/web/js/info.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         WebSocketManager.scanAndConnect(); // Démarre la recherche
