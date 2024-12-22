@@ -167,6 +167,7 @@ const GyroManager = (function () {
 
     function setLimitGX(value) {
         limit_g_x = value;
+        console.log(limit_g_x)
         updateValuesDisplay();
     }
 
