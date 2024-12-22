@@ -20,8 +20,8 @@ Thumbs.db
 # Fichiers du gestionnaire de librairies Arduino
 libraries/
 lib à modifier/
-sav/
-sav2/
+#sav/
+#sav2/
 # Fichiers de sauvegarde (IDE et autres)
 *.bak
 *.swp
