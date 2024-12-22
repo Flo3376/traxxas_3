@@ -116,10 +116,10 @@ const WebSocketManager = (function () {
                 else if (data.type === "gyro") {
                         GyroManager.setX(data.roll);
                         GyroManager.setY(data.pitch);
-                        GyroManager.SetOffset_X=data.Offset_X; 
-                        GyroManager.SetOffset_Y=data.Offset_Y;
-                        GyroManager.Setlimit_g_x = data.Limit_g_x;
-                        GyroManager.Setlimit_g_y = data.Limit_g_y;
+                        GyroManager.SetOffset_X(data.Offset_X);
+                        GyroManager.SetOffset_Y(data.Offset_Y);
+                        GyroManager.Setlimit_g_x(data.Limit_g_x);
+                        GyroManager.Setlimit_g_y(data.Limit_g_y);
                         //setX(data.roll);
                         //setY(data.pitch);
                     }
