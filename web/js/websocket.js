@@ -112,7 +112,11 @@ const WebSocketManager = (function () {
                     setY(data.pitch);
                 } else if (data.type === "info") {
                     displayInfo(data);
-                } else {
+                } 
+                else if (data.type === "channels") {
+                        updateGauges(data);
+                    }
+                else {
                     console.warn("Message inconnu ou inattendu :", data);
                 }
             } catch (error) {
