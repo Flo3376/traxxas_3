@@ -154,6 +154,26 @@ const GyroManager = (function () {
             alertSound.pause();
         }
     }
+    // Méthodes pour définir les offsets et limites
+    function setOffsetX(value) {
+        Offset_X = value;
+        updateValuesDisplay();
+    }
+
+    function setOffsetY(value) {
+        Offset_Y = value;
+        updateValuesDisplay();
+    }
+
+    function setLimitGX(value) {
+        limit_g_x = value;
+        updateValuesDisplay();
+    }
+
+    function setLimitGY(value) {
+        limit_g_y = value;
+        updateValuesDisplay();
+    }
 
     // Expose les fonctions publiques
     return {
@@ -169,5 +189,9 @@ const GyroManager = (function () {
             progress = 0;
             requestAnimationFrame(smoothUpdate);
         },
+        SetOffset_X: setOffsetX, // Exposition des méthodes
+        SetOffset_Y: setOffsetY,
+        Setlimit_g_x: setLimitGX,
+        Setlimit_g_y: setLimitGY,
     };
 })();

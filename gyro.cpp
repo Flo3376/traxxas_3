@@ -9,7 +9,7 @@ bool debug_gyro = false;
 
 float gyroOffsetX = 3.3, gyroOffsetY = -6.7, gyroOffsetZ = 0.0;
 float accelOffsetX = 0, accelOffsetY = -0, accelOffsetZ = -9.47;
-float roll = 0.0, pitch = 0.0;
+float roll = 5.0, pitch = 5.0;
 float ax = -0.66, ay = -0.66, az = 9.41;
 
 int limit_g_x=10;
