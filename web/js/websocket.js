@@ -138,4 +138,12 @@ const WebSocketManager = (function () {
         scanAndConnect();
     }
 
-    // Expose les méth
+    // Expose les méthodes publiques
+    return {
+        scanAndConnect,
+        reconnectWebSocket,
+    };
+})();
+
+// Exportation en tant que module ES6 (si nécessaire)
+export default WebSocketManager;
