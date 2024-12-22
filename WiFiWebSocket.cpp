@@ -93,7 +93,7 @@ void WiFiWebSocket::handle() {
 void WiFiWebSocket::onWebSocketEvent(AsyncWebSocket* server, AsyncWebSocketClient* client, AwsEventType type, void* arg, uint8_t* data, size_t len) {
     if (type == WS_EVT_CONNECT) {
         Serial.printf("Client connecté. ID : %u\n", client->id());
-        client->text("Connexion établie !");
+        //client->text("Connexion établie !");
     } else if (type == WS_EVT_DISCONNECT) {
         Serial.printf("Client déconnecté. ID : %u\n", client->id());
     } else if (type == WS_EVT_DATA) {
