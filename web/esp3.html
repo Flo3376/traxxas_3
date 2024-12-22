@@ -155,55 +155,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 /*
-    const status = document.getElementById("status");
-    const loader = document.getElementById("loader");
     
-    
-    const infoDiv = document.getElementById('info');
-    function displayInfo(data) {
-        const uptimeFormatted = formatUptime(data.uptime);
-        const rssiColor = getRssiColor(data.rssi);
-        const content = `
-            <p><strong style="color:orange">Nom:</strong> ${data.name}</p>
-            <hr>
-            <p><strong style="color:orange">Version:</strong> ${data.version}</p>
-            <p><strong style="color:orange">Adresse IP locale:</strong> ${data.localip}</p>
-            <p><strong style="color:orange">SSID:</strong> ${data.ssid}</p>
-             <p><strong style="color:orange">RSSI:</strong> <span style="color:${rssiColor}">${data.rssi} dBm</span></p>
-        <hr>
-            <p><strong style="color:orange">Entrées:</strong> ${data.input}</p>
-            <p><strong style="color:orange">Sorties:</strong> ${data.output}</p>
-            <hr>
-            <p><strong style="color:orange">Uptime:</strong> ${uptimeFormatted}</p>
-        `;
-        infoDiv.innerHTML = content;
-        status.style.display = "none"; // Cache le loader
-    }
-
-    function getRssiColor(rssi) {
-    if (rssi >= -50) {
-        return 'green'; // Excellent signal
-    } else if (rssi >= -70) {
-        return 'yellow'; // Good signal
-    } else if (rssi >= -85) {
-        return 'orange'; // Medium signal
-    } else {
-        return 'red'; // Poor signal
-    }
-}
-
-    function formatUptime(seconds) {
-        const hours = Math.floor(seconds / 3600);
-        const minutes = Math.floor((seconds % 3600) / 60);
-        const secs = seconds % 60;
-        if (hours > 0) {
-            return `${hours}h ${minutes}m ${secs}s`;
-        } else if (minutes > 0) {
-            return `${minutes}m ${secs}s`;
-        } else {
-            return `${secs}s`;
-        }
-    }
 
 ////////////////////////////////////////////////////////////////////////
     const svg = document.querySelector("svg");
@@ -397,6 +349,13 @@
 <script src="https://flo3376.github.io/traxxas_3/web/js/websocket.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/gauge.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/info.js"></script>
+<script src="https://flo3376.github.io/traxxas_3/web/js/gyro.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        GyroManager.initialize("svg", "layer3");
+    });
+</script>
+
 <script>
     document.addEventListener("DOMContentLoaded", () => {
         WebSocketManager.scanAndConnect(); // Démarre la recherche
