@@ -146,4 +146,4 @@ const WebSocketManager = (function () {
 })();
 
 // Exportation en tant que module ES6 (si nécessaire)
-export default WebSocketManager;
+//export default WebSocketManager;
