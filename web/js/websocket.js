@@ -114,8 +114,8 @@ const WebSocketManager = (function () {
                     InfoManager.displayInfo(data);
                 } 
                 else if (data.type === "gyro") {
-                        setX(data.roll);
-                        setY(data.pitch);
+                        GyroManager.setX(data.roll);
+                        GyroManager.setY(data.pitch);
                         Offset_X=data.Offset_X;
                         Offset_Y=data.Offset_Y;
                         limit_g_x = data.Limit_g_x;
