@@ -175,6 +175,7 @@
 
             // Exécuter le reste des scripts de manipulation ici
             initializeSvgManipulation();
+            GyroManager.initialize("svg", "layer3");
         })
         .catch(error => {
             console.error("Erreur lors du chargement du SVG :", error);
@@ -192,7 +193,7 @@
 <script src="https://flo3376.github.io/traxxas_3/web/js/gyro.js"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        GyroManager.initialize("svg", "layer3");
+        //GyroManager.initialize("svg", "layer3");
     });
 </script>
 
