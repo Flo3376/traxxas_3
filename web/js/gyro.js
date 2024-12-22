@@ -1,7 +1,8 @@
+let billeLayer = null; // Accessible globalement
+
 const GyroManager = (function () {
     let svg = null;
-    let billeLayer = null;
-
+    
     let rotation = 0; // Angle de rotation actuel
     let yDegrees = 0; // Position Y actuel
     let Offset_X = 0;
