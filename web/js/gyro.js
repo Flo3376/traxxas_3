@@ -84,7 +84,11 @@ const GyroManager = (function () {
         const transformString = `
             translate(${translateX}, ${translateY})
             rotate(${rotation}, ${billeCenterX}, ${billeCenterY})`;
-        billeLayer.setAttribute("transform", transformString);
+        if (billeLayer) {
+            billeLayer.setAttribute("transform", transformString);
+        } else {
+            console.warn("billeLayer est null, vérifiez l'ID ou le chargement du SVG.");
+        }
 
         updateValuesDisplay();
     }
