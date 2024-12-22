@@ -9,8 +9,8 @@
 //std::queue<String> messageQueue; // File d’attente pour les messages WebSocket
 
 // Configuration Wi-Fi
-const char* ssid = "Redmi Note 13 Pro 5G";
-const char* password = "uheku675";
+//const char* ssid = "Redmi Note 13 Pro 5G";
+//const char* password = "uheku675";
 
 
 //mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie 
@@ -70,6 +70,28 @@ void loop() {
     const unsigned long slowInterval = 10000; // 10 secondes
     if (currentMillis - lastSlowLoop >= slowInterval) {
         lastSlowLoop = currentMillis;
+        if (transmit_mod == 1) {
+
+          JsonDocument doc;
+          doc["type"] = "info";
+          doc["name"] = car_name;
+          doc["version"] = version_soft;
+          doc["localip"] = WiFi.localIP().toString();
+          doc["uptime"] = millis() / 1000;
+          doc["ssid"] = WIFI_SSID;
+          doc["rssi"] = WiFi.RSSI();
+          doc["output"] = output_u;
+          doc["input"] = input_u;
+          
+
+          String jsonString;
+          serializeJson(doc, jsonString);
+          wifiWebSocket.sendData(jsonString);
+
+
+            //String data_to_send = generateGyroJson();
+            //wifiWebSocket.sendData(data_to_send);
+        }
         //wifiWebSocket.printWebSocketStatistics();
     }
 

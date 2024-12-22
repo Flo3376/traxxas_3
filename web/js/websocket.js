@@ -111,7 +111,7 @@ const WebSocketManager = (function () {
                     setX(data.roll);
                     setY(data.pitch);
                 } else if (data.type === "info") {
-                    displayInfo(data);
+                    InfoManager.displayInfo(data);
                 } 
                 else if (data.type === "channels") {
                         updateGauges(data);
