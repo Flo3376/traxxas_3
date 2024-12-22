@@ -142,10 +142,21 @@ const WebSocketManager = (function () {
         scanAndConnect();
     }
 
+    function sendTabRequest(tabIndex) {
+        const tabRequest = { type: "mod", mod_req: tabIndex };
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(tabRequest));
+            console.log("Tab request sent:", tabRequest);
+        } else {
+            console.warn("WebSocket not connected");
+        }
+    }
+
     // Expose les méthodes publiques
     return {
         scanAndConnect,
         reconnectWebSocket,
+        sendTabRequest,
     };
 })();
 
