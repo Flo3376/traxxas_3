@@ -192,8 +192,25 @@
 <script src="https://flo3376.github.io/traxxas_3/web/js/info.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/gyro.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        //GyroManager.initialize("svg", "layer3");
+     document.addEventListener("DOMContentLoaded", function () {
+        const svgContainer = document.getElementById("svg-container");
+
+        const svgUrl = "https://raw.githubusercontent.com/flo3376/traxxas_3/main/web/img/ah.svg";
+
+        fetch(svgUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Erreur de chargement du SVG : ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(svgContent => {
+                svgContainer.innerHTML = svgContent;
+                GyroManager.initialize("svg", "layer3");
+            })
+            .catch(error => {
+                console.error("Erreur lors du chargement du SVG :", error);
+            });
     });
 </script>
 
