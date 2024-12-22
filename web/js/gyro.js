@@ -30,7 +30,7 @@ const GyroManager = (function () {
     // Initialisation
     function initialize(svgElementId, billeLayerId) {
         svg = document.querySelector(svgElementId);
-        billeLayer = svg.getElementById(billeLayerId);
+        billeLayer = svg?.getElementById(billeLayerId);
 
         // Écouteur pour réinitialiser le gyroscope
         document.getElementById("reset-gyro").addEventListener("click", async function () {
@@ -85,6 +85,7 @@ const GyroManager = (function () {
         const transformString = `
             translate(${translateX}, ${translateY})
             rotate(${rotation}, ${billeCenterX}, ${billeCenterY})`;
+        const billeLayer = GyroManager.getBilleLayer();
         if (billeLayer) {
             billeLayer.setAttribute("transform", transformString);
         } else {
@@ -155,6 +156,7 @@ const GyroManager = (function () {
     // Expose les fonctions publiques
     return {
         initialize,
+        getBilleLayer: () => billeLayer, // Méthode pour accéder à billeLayer
         setX,
         setY,
     };
