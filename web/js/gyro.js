@@ -32,7 +32,10 @@ const GyroManager = (function () {
         svg = document.querySelector(svgElementId);
         billeLayer = svg?.getElementById(billeLayerId);
 
-        // Écouteur pour réinitialiser le gyroscope
+        if (!billeLayer) {
+            console.error(`L'élément avec l'ID '${billeLayerId}' est introuvable dans le SVG.`);
+        }
+
         document.getElementById("reset-gyro").addEventListener("click", async function () {
             const tabRequest = { type: "command", command: "reset_gyro" };
             if (ws && ws.readyState === WebSocket.OPEN) {
@@ -40,7 +43,6 @@ const GyroManager = (function () {
             }
         });
 
-        // Démarre les mises à jour périodiques des alertes
         setInterval(updateBlinks, 250);
     }
 
@@ -74,8 +76,12 @@ const GyroManager = (function () {
 
     // Fonction pour appliquer les transformations
     function updateBilleTransform() {
-        const radianRotation = (rotation * Math.PI) / 180;
+        if (!billeLayer) {
+            console.warn("billeLayer est null, vérifiez l'ID ou le chargement du SVG.");
+            return;
+        }
 
+        const radianRotation = (rotation * Math.PI) / 180;
         const height = degreesToPixels(yDegrees);
         const dynamicDrift = -2.85 * yDegrees * Math.sin(radianRotation);
 
@@ -85,12 +91,8 @@ const GyroManager = (function () {
         const transformString = `
             translate(${translateX}, ${translateY})
             rotate(${rotation}, ${billeCenterX}, ${billeCenterY})`;
-        const billeLayer = GyroManager.getBilleLayer();
-        if (billeLayer) {
-            billeLayer.setAttribute("transform", transformString);
-        } else {
-            console.warn("billeLayer est null, vérifiez l'ID ou le chargement du SVG.");
-        }
+
+        billeLayer.setAttribute("transform", transformString);
 
         updateValuesDisplay();
     }
@@ -157,7 +159,15 @@ const GyroManager = (function () {
     return {
         initialize,
         getBilleLayer: () => billeLayer, // Méthode pour accéder à billeLayer
-        setX,
-        setY,
+         setX: (newRotation) => {
+            targetRotation = newRotation;
+            progress = 0;
+            requestAnimationFrame(smoothUpdate);
+        },
+        setY: (degrees) => {
+            targetYDegrees = degrees;
+            progress = 0;
+            requestAnimationFrame(smoothUpdate);
+        },
     };
 })();
