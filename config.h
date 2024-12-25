@@ -1,20 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// Configuration Wi-Fi : Définir le SSID et le mot de passe
+/*======================*/
+//       Wifi           //
+/*======================*/
 #define WIFI_SSID "Redmi Note 13 Pro 5G"
 #define WIFI_PASSWORD "uheku675"
 //#define WIFI_SSID "NG_XR500_5GZ"
 //#define WIFI_PASSWORD "YsfW6wB89j6pkAB9C3jSef749H8cUV"
-//#define MDNS_NAME "bobinette_the_esp_killeuse"
-// Configuration IP statique (si nécessaire)
-//#define WIFI_STATIC_IP IPAddress(192, 168, 127, 100)
-//#define WIFI_GATEWAY IPAddress(192, 168, 127, 1)
-//#define WIFI_SUBNET IPAddress(255, 255, 255, 0)
-
-
-
-
 
 
 /*======================*/
@@ -80,9 +73,6 @@ constexpr const int output_u = 8;
 //    Entrées servo     //
 /*======================*/
 // Entée servo pour écouter la télécommande !!ne pas modifier!!
-/*const int channel_1 = 19;
-const int channel_2 = 18;
-const int channel_3 = 5;*/
 const int channel_1 = 36;
 const int channel_2 = 39;
 const int channel_3 = 34;

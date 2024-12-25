@@ -6,6 +6,12 @@
 #include "gyro.h"
 #include "my_i_servo.h"
 #include <queue>
+
+
+#include <ESP32Servo.h>
+Servo servo1; // Servo sur la broche 19
+Servo servo2; // Servo sur la broche 18
+Servo servo3; // Servo sur la broche 15
 //std::queue<String> messageQueue; // File d’attente pour les messages WebSocket
 
 // Configuration Wi-Fi
@@ -43,6 +49,12 @@ const unsigned long interval = 250;
 unsigned long previousMillis_5s = 0; // Gestion du temps pour le `loop`
 const unsigned long interval_5s = 2500;
 
+int angle = 0;                  // Angle actuel des servos
+int increment = 45;              // Incrément d'angle (1 pour avancer, -1 pour reculer)
+
+
+
+
 void setup() {
     delay(5000);
     Serial.begin(115200);
@@ -56,11 +68,15 @@ void setup() {
     pinMode(channel_5, INPUT);
     pinMode(channel_6, INPUT);
 
+    servo1.attach(19);
+    servo2.attach(18);
+    servo3.attach(5);
+
   }
 
 unsigned long lastReconnectCheck = 0; // Dernière vérification de la connexion Wi-Fi
 const unsigned long reconnectInterval = 5000; // Intervalle de 5 secondes pour tenter une reconnexion
-
+//18 19 15 aux
 
 void loop() {
     unsigned long currentMillis = millis();
@@ -109,6 +125,17 @@ void loop() {
             String jsonData = generateServoJson();
             wifiWebSocket.sendData(jsonData);
         }
+
+        // Mouvement d'essuie-glace
+        angle += increment; // Ajuste l'angle des servos
+        if (angle >= 180 || angle <= 0) {
+            increment = -increment; // Inverse la direction au bout des limites
+        }
+
+        // Commande des servos
+        servo1.write(angle);
+        servo2.write(angle);
+        servo3.write(angle);
     }
 
     // Boucle rapide
