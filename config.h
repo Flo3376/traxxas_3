@@ -23,7 +23,8 @@ const int S_6_PWM = 14;
 const int S_7_PWM = 12;
 const int S_8_PWM = 13;
 
-
+//config voiture principale
+const bool american = true; 
 
 // Configuration du clignotant gauche
 const int PIN_CLIGNOTANT_GAUCHE = S_2_PWM;  // Broche associée
@@ -31,11 +32,13 @@ const unsigned long VITESSE_CLIGNOTANT_GAUCHE = 500; // Intervalle en ms
 const int ETAT_BAS_CLIGNOTANT_GAUCHE = 10;  // État bas (PWM)
 const int ETAT_HAUT_CLIGNOTANT_GAUCHE = 255; // État haut (PWM)
 
+
 // Configuration du clignotant droit
 const int PIN_CLIGNOTANT_DROIT = S_3_PWM;
 const unsigned long VITESSE_CLIGNOTANT_DROIT = 500;
 const int ETAT_BAS_CLIGNOTANT_DROIT = 10;
 const int ETAT_HAUT_CLIGNOTANT_DROIT = 255;
+
 
 // Configuration des Angel_eyes
 const int PIN_ANGEL_EYES = S_8_PWM;
@@ -81,6 +84,19 @@ const int channel_5 = 16;
 const int channel_6 = 4;
 
 /*======================*/
+//    Sortie servo     //
+/*======================*/
+// Sortie servo pour piloter des servos aux !!ne pas modifier!!
+const int aux_serv_1 = 19;
+const int aux_serv_2 = 18;
+const int aux_serv_3 = 5;
+
+//info sur la largeur d'impulsion utilisé par la télécommande pour utiliser un servo
+const int minPulse = 1000;
+const int maxPulse = 2000;
+
+
+/*======================*/
 //  Gestion des entrées //
 /*======================*/
 // Chaque entrée peu servir à surveiller quelque chose
@@ -97,9 +113,7 @@ const int horn = -1;
 const int light_mod= channel_3;
 
 
-//info sur la largeur d'impulsion utilisé par la télécommande pour utiliser un servo
-const int minPulse = 1000;
-const int maxPulse = 2000;
+
 
 
 

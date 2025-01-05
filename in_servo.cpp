@@ -1,4 +1,4 @@
-#include "my_i_servo.h"
+#include "in_servo.h"
 #include <Arduino.h>
 #include "config.h" // Ajout pour accéder aux constantes channel_1, channel_2, etc.
 
