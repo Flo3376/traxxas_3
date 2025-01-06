@@ -7,10 +7,12 @@
 #include "in_servo.h"
 #include "out_servo.h"
 #include <queue>
+#include <ESP32Servo.h> // Bibliothèque spécifique à l'ESP32
 
 
 //mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
 int transmit_mod = 1;
+
 
 
 // Initialisation des clignotants
@@ -34,8 +36,7 @@ TOR_Light HEADLIGHTS(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS);
 // Objet WiFiWebSocket avec les constantes définies dans config.h
 WiFiWebSocket wifiWebSocket(WIFI_SSID, WIFI_PASSWORD);
 
-// Objet servo pour le contrôle des 3 sorties
-ServoController servoController;
+
 
 unsigned long previousMillis = 0;  // Gestion du temps pour le `loop`
 const unsigned long interval = 250;
@@ -46,7 +47,14 @@ const unsigned long interval_5s = 2500;
 int angle = 0;       // Angle actuel des servos
 int increment = 45;  // Incrément d'angle (1 pour avancer, -1 pour reculer)
 
+// Déclaration des servos
+CustomServo* servo1;
+CustomServo* servo2;
+CustomServo* servo3;
 
+//Servo servo1;
+//Servo servo2;
+//Servo servo3;
 
 
 void setup() {
@@ -54,22 +62,31 @@ void setup() {
   // Initialisation des communications
   Serial.begin(115200);
   Serial.println("demarrage");
+  //servo1.attach(aux_serv_1,500, 2400);
+  //servo2.attach(aux_serv_2,500, 2400);
+  //servo3.attach(aux_serv_3,500, 2400);
+  //servo1.write(180);
+  //servo2.write(180);
+  //servo3.write(180);
+
   //initialisation des servos (sorties)
-  servoController.initializeServos();
-  Serial.println("servo chargé");
+      // Initialisation des servos
+    servo1 = new CustomServo(aux_serv_1,500,2400, 0); // Pin 14, position initiale 0
+    servo2 = new CustomServo(aux_serv_2,500,2400, 0); // Pin 15, position initiale 0
+    servo3 = new CustomServo(aux_serv_3,500,2400, 0); // Pin 16, position initiale 0
 
-  // Déplacer le premier servo à 90°
-    servoController.writeAngle(0, 180);
-    delay(1000);
-    servoController.writeAngle(0, 0);
+    // Exemple : Déplacement immédiat
+    servo1->jumpTo(180);
+    servo2->jumpTo(180);
+    servo3->jumpTo(180);
 
-    // Déplacer le deuxième servo à 45°
-    servoController.writeAngle(1, 45);
-    delay(1000);
-
-    // Déplacer le troisième servo à 180°
-    servoController.writeAngle(2, 180);
-    delay(1000);
+    delay(5000);
+    //servo1.write(0);
+    //servo2.write(0);
+    //servo3.write(0);
+    servo1->jumpTo(0);
+    servo2->jumpTo(0);
+    servo3->jumpTo(0);
 
   wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
 
@@ -155,6 +172,17 @@ void loop() {
       wifiWebSocket.sendData(jsonData);
     }
 
+  /*=======================================*/
+  /*          surveillance gyro            */
+  /* si le 4x4 atteint un angle trop élevé */
+  /*=======================================*/
+  
+  if(abs(roll)>abs(limit_g_x)||abs(pitch)>abs(limit_g_y))
+  {
+    servo2->jumpTo(180);
+  }else{
+    servo2->jumpTo(0);
+  }
     
 }
 
@@ -165,7 +193,7 @@ void loop() {
 
 
     lastFastLoop = currentMillis;
-    servoController.update();
+    
     wifiWebSocket.handle();
 
     if (!messageQueue.empty()) {

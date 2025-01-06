@@ -7,7 +7,7 @@ Adafruit_MPU6050 mpu;
 // Variables globales
 bool debug_gyro = false;
 
-float gyroOffsetX = 3.3, gyroOffsetY = -6.7, gyroOffsetZ = 0.0;
+float gyroOffsetX = -3.3, gyroOffsetY = 6.7, gyroOffsetZ = 0.0;
 float accelOffsetX = 0, accelOffsetY = -0, accelOffsetZ = -9.47;
 float roll = 5.0, pitch = 5.0;
 float ax = -0.66, ay = -0.66, az = 9.41;

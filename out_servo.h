@@ -1,34 +1,29 @@
-#ifndef Out_SERVO_H
-#define Out_SERVO_H
+#ifndef OUT_SERVO_H
+#define OUT_SERVO_H
 
+#include <ESP32Servo.h> // Bibliothèque spécifique à l'ESP32
 
-#include "config.h"
-#include <ESP32Servo.h>
-
-class ServoController {
+class CustomServo {
 public:
-    void initializeServos();
-    void pulseToAsync(int servoIndex, int angle, unsigned long duration);
-    void goToAsync(int servoIndex, int targetAngle, unsigned long duration);
-    void jumpTo(int servoIndex, int targetAngle);
-    void update(); // À appeler régulièrement dans `loop`.
-    void writeAngle(int servoIndex, int angle);
+    // Constructeur
+    CustomServo(int pin, int min, int max,int initialPos = 0);
+
+    // Méthodes publiques
+    void goTo(int targetAngle, unsigned long duration); // Déplacement asynchrone
+    void update();                                      // Mise à jour à appeler régulièrement
+    void jumpTo(int targetAngle);                      // Déplacement immédiat
+    int getCurrentAngle();                             // Récupérer l'angle actuel
 
 private:
-    Servo servos[3]; // 3 servos configurés
-    int servoPins[3] = {aux_serv_1, aux_serv_2, aux_serv_3}; // Correspond aux constantes aux_serv_1, aux_serv_2, etc.
-    int servoAngles[3] = {90, 90, 90}; // Angles initiaux
-    struct ServoState {
-        bool active = false;           // Suivi de l'état actif pour "go_to" et "pulse_to"
-        bool returningToCenter = false; // Pour gérer le retour au centre après "pulse_to"
-        int originalAngle = 90;
-        int currentAngle = 90;         // Angle actuel suivi
-        int targetAngle = 90;          // Angle cible
-        unsigned long startTime = 0;
-        unsigned long duration = 0;
-    };
-
-    ServoState servoStates[3]; // Gestion des états pour chaque servo
+    // Variables internes
+    Servo servo; // Utilisation de la classe ESP32Servo
+    int pin;
+    int currentAngle;
+    int startAngle;
+    int targetAngle;
+    unsigned long startTime;
+    unsigned long duration;
+    bool active = false;
 };
 
-#endif
+#endif // OUT_SERVO_H

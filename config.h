@@ -67,7 +67,7 @@ const int ETAT_HAUT_HEADLIGHTS = 255;
 //  Info  pour le mod 1 //
 /*======================*/
 constexpr const char* car_name = "Hummer_Bob";
-constexpr const char* version_soft = "0.5.1";
+constexpr const char* version_soft = "0.7.0";
 constexpr const int input_u = 4;
 constexpr const int output_u = 8;
 
