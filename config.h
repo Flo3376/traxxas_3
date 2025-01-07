@@ -27,7 +27,7 @@ const int S_8_PWM = 13;
 const bool american = true; 
 
 // Variables globales
-const bool debug_output = true;
+const bool debug_output = false;
 
 /*=======================================*/
 //  Configuration des roles des ampoules //
@@ -55,17 +55,18 @@ const int ETAT_BAS_ANGEL_EYES = 5;
 const int ETAT_HAUT_ANGEL_EYES = 128;
 
 // Configuration du troisiéme feu stop
-const int PIN_THIRD_BRAKE = S_4_PWM;
+const int PIN_THIRD_BRAKE = S_6_PWM;
 const int ETAT_BAS_THIRD_BRAKE = 5;
-const int ETAT_HAUT_THIRD_BRAKE = 128;
+const int ETAT_HAUT_THIRD_BRAKE = 255;
 
 // Configuration des stops
-const int PIN_BRAKES = S_1_PWM;
+const int PIN_BRAKES = S_5_PWM;
 const int ETAT_BAS_BRAKES = 5;
 const int ETAT_HAUT_BRAKES = 255;
+const int LVL_BRAKES = -10;
 
 // Configuration des feu avants
-const int PIN_HEADLIGHTS = S_6_PWM;
+const int PIN_HEADLIGHTS = S_1_PWM;
 const int ETAT_BAS_HEADLIGHTS = 5;
 const int ETAT_HAUT_HEADLIGHTS = 255;
 

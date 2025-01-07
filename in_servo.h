@@ -23,6 +23,8 @@ extern int horn_data;
 extern int brake_data;
 extern int light_mod_data;
 
+extern int light_mod_mode;       // Variable pour le mode (0 à 3)
+
 /*======================*/
 //  Gestion des entrées //
 /*======================*/

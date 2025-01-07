@@ -52,11 +52,6 @@ CustomServo* servo1;
 CustomServo* servo2;
 CustomServo* servo3;
 
-//Servo servo1;
-//Servo servo2;
-//Servo servo3;
-
-
 void setup() {
   delay(2500);
   // Initialisation des communications
@@ -68,23 +63,7 @@ void setup() {
   servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);  // Pin 15, position initiale 0
   servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);  // Pin 16, position initiale 0
 
-  // Exemple : Déplacement immédiat
-  servo1->jumpTo(180);
-  servo2->jumpTo(180);
-  servo3->jumpTo(180);
-
-  delay(5000);
-  //servo1.write(0);
-  //servo2.write(0);
-  //servo3.write(0);
-  servo1->jumpTo(0);
-  servo2->jumpTo(0);
-  servo3->jumpTo(0);
-
   wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
-
-
-
   setupGyro();  // Initialisation du gyroscope
 
   pinMode(channel_1, INPUT);
@@ -169,9 +148,9 @@ void loop() {
     /*=======================================*/
 
     if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
-      servo2->jumpTo(180);
+      servo1->jumpTo(180);
     } else {
-      servo2->jumpTo(0);
+      servo1->jumpTo(0);
     }
 
     /*=======================================*/
@@ -203,7 +182,44 @@ void loop() {
     } else {
       clignotantGauche.stop();
     }
+    /*=======================================*/
+    /*          surveillance frein           */
+    /*            et accélérrateur           */
+    /*=======================================*/
+    if(throttle_data<LVL_BRAKES){
+      third_brake.run();
+      brakes.run();
+      if (debug_output) {
+        Serial.print(throttle_data);
+        Serial.print(" <  ");
+        Serial.print(LVL_BRAKES);
+        Serial.println("    stop on");
+      }
+    }
+    else{
+      third_brake.stop();
+      brakes.stop();
+
+      if (debug_output) {
+        Serial.print(throttle_data);
+        Serial.print(" >  ");
+        Serial.print(LVL_BRAKES);
+        Serial.println("    stop off");
+      }
+    }
+
+    /*=======================================*/
+    /*    surveillance commodo éclairage     */
+    /*  off/veilleuse/pahre/plein phare      */
+    /*=======================================*/
+    Serial.print("Mode actuel de Light Mod : ");
+    Serial.println(light_mod_mode);
+
+
+
+
   }
+
 
   // Boucle rapide
   static unsigned long lastFastLoop = 0;
@@ -221,8 +237,8 @@ void loop() {
     }
 
 
-    third_brake.stop();
-    brakes.stop();
+    //third_brake.stop();
+    //brakes.stop();
     HEADLIGHTS.stop();
   }
 }

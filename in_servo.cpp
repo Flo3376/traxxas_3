@@ -17,6 +17,8 @@ int winch_data = -1;
 int horn_data = -1;
 int brake_data = -1;
 int light_mod_data = -1;
+int prev_light_mod_data = 0;
+int light_mod_mode = 0; // Définition de la variable
 
 // Implémentation des fonctions
 int readPWM(int pin) {
@@ -40,6 +42,27 @@ int readPWM(int pin) {
   return 0;  // Retourner 0 si aucune valeur n'a été lue
 }
 
+void handleLightMod() {
+    // Si l'état actuel est différent de l'état précédent
+    if (light_mod_data != prev_light_mod_data) {
+        // Vérifier que le bouton est en position "appuyé" (100)
+        if (light_mod_data == 100) {
+            // Incrémenter le mode avec retour à 0 après 3
+            light_mod_mode = (light_mod_mode + 1) % 4;
+
+            // Afficher le mode actuel pour debug
+            if (Debug_Input_Servo) {
+                Serial.print("Light Mod mode changé : ");
+                Serial.println(light_mod_mode);
+            }
+        }
+
+        // Mettre à jour la valeur précédente
+        prev_light_mod_data = light_mod_data;
+    }
+}
+
+
 void updateInputData() {
   // Associer les données des canaux aux rôles définis dans config.h
   steer_data = (steer != -1) ? getChannelData(steer) : 0;
@@ -52,6 +75,9 @@ void updateInputData() {
   winch_data = (winch != -1) ? getChannelData(winch) : 0;
   horn_data = (horn != -1) ? getChannelData(horn) : 0;
   light_mod_data = (light_mod != -1) ? getChannelData(light_mod) : 0;
+
+  // Surveiller le changement de mode light_mod
+  handleLightMod();
 }
 
 // Tableau global pour stocker les données des canaux
