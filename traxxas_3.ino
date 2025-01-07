@@ -132,8 +132,8 @@ void loop() {
   if (currentMillis - lastMediumLoop >= mediumInterval) {
     lastMediumLoop = currentMillis;
     updateChannels();
+    readGyro();
     if (transmit_mod == 2) {
-      readGyro();
       String data_to_send = generateGyroJson();
       wifiWebSocket.sendData(data_to_send);
     }
