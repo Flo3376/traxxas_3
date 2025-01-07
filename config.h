@@ -26,24 +26,30 @@ const int S_8_PWM = 13;
 //config voiture principale
 const bool american = true; 
 
+// Variables globales
+const bool debug_output = true;
+
+/*=======================================*/
+//  Configuration des roles des ampoules //
+/*=======================================*/
 // Configuration du clignotant gauche
-const int PIN_CLIGNOTANT_GAUCHE = S_2_PWM;  // Broche associée
+const int PIN_CLIGNOTANT_GAUCHE = S_8_PWM;  // Broche associée
 const unsigned long VITESSE_CLIGNOTANT_GAUCHE = 500; // Intervalle en ms
 const int ETAT_BAS_CLIGNOTANT_GAUCHE = 10;  // État bas (PWM)
 const int ETAT_HAUT_CLIGNOTANT_GAUCHE = 255; // État haut (PWM)
-const int lvl_CLIGNOTANT_GAUCHE = 45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
+const int LVL_CLIGNOTANT_GAUCHE = -45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
 
 
 // Configuration du clignotant droit
-const int PIN_CLIGNOTANT_DROIT = S_3_PWM;
+const int PIN_CLIGNOTANT_DROIT = S_7_PWM;
 const unsigned long VITESSE_CLIGNOTANT_DROIT = 500;
 const int ETAT_BAS_CLIGNOTANT_DROIT = 10;
 const int ETAT_HAUT_CLIGNOTANT_DROIT = 255;
-const int lvl_CLIGNOTANT_DROIT = 45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
+const int LVL_CLIGNOTANT_DROIT = 45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
 
 
 // Configuration des Angel_eyes
-const int PIN_ANGEL_EYES = S_8_PWM;
+const int PIN_ANGEL_EYES = S_2_PWM;
 const unsigned long VITESSE_ANGEL_EYES = 500;
 const int ETAT_BAS_ANGEL_EYES = 5;
 const int ETAT_HAUT_ANGEL_EYES = 128;
@@ -103,7 +109,7 @@ const int maxPulse = 2000;
 /*======================*/
 // Chaque entrée peu servir à surveiller quelque chose
 // mettre -1 pour non attribué, sinon mettre channel_1 ou channel_2 ou channel_3 ou ......
-const int steer = channel_2;
+const int steer = channel_3;
 const int throttle = channel_1;
 const int brake = channel_1;
 const int gear_box = -1;
@@ -112,6 +118,6 @@ const int rear_diff = -1;
 const int light = -1;
 const int winch = -1;
 const int horn = -1;
-const int light_mod= channel_3;
+const int light_mod= channel_2;
 
 #endif

@@ -1,13 +1,13 @@
 #include "WiFiWebSocket.h"
 #include <ArduinoJson.h>
-#include "Simulation.h"  
+#include "Simulation.h"
 #include "Ampoules.h"
 #include "config.h"
 #include "gyro.h"
 #include "in_servo.h"
 #include "out_servo.h"
 #include <queue>
-#include <ESP32Servo.h> // Bibliothèque spécifique à l'ESP32
+#include <ESP32Servo.h>  // Bibliothèque spécifique à l'ESP32
 
 
 //mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
@@ -62,37 +62,30 @@ void setup() {
   // Initialisation des communications
   Serial.begin(115200);
   Serial.println("demarrage");
-  //servo1.attach(aux_serv_1,500, 2400);
-  //servo2.attach(aux_serv_2,500, 2400);
-  //servo3.attach(aux_serv_3,500, 2400);
-  //servo1.write(180);
-  //servo2.write(180);
-  //servo3.write(180);
 
   //initialisation des servos (sorties)
-      // Initialisation des servos
-    servo1 = new CustomServo(aux_serv_1,500,2400, 0); // Pin 14, position initiale 0
-    servo2 = new CustomServo(aux_serv_2,500,2400, 0); // Pin 15, position initiale 0
-    servo3 = new CustomServo(aux_serv_3,500,2400, 0); // Pin 16, position initiale 0
+  servo1 = new CustomServo(aux_serv_1, 500, 2400, 0);  // Pin 14, position initiale 0
+  servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);  // Pin 15, position initiale 0
+  servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);  // Pin 16, position initiale 0
 
-    // Exemple : Déplacement immédiat
-    servo1->jumpTo(180);
-    servo2->jumpTo(180);
-    servo3->jumpTo(180);
+  // Exemple : Déplacement immédiat
+  servo1->jumpTo(180);
+  servo2->jumpTo(180);
+  servo3->jumpTo(180);
 
-    delay(5000);
-    //servo1.write(0);
-    //servo2.write(0);
-    //servo3.write(0);
-    servo1->jumpTo(0);
-    servo2->jumpTo(0);
-    servo3->jumpTo(0);
+  delay(5000);
+  //servo1.write(0);
+  //servo2.write(0);
+  //servo3.write(0);
+  servo1->jumpTo(0);
+  servo2->jumpTo(0);
+  servo3->jumpTo(0);
 
   wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
 
 
 
-  setupGyro();            // Initialisation du gyroscope
+  setupGyro();  // Initialisation du gyroscope
 
   pinMode(channel_1, INPUT);
   pinMode(channel_2, INPUT);
@@ -106,7 +99,6 @@ void setup() {
   /*=====================*/
   /*test des sortie pwm  */
   /*=====================*/
-
   const int S_PWM[] = { S_1_PWM, S_2_PWM, S_3_PWM, S_4_PWM, S_5_PWM, S_6_PWM, S_7_PWM, S_8_PWM };  // Tableau des pins PWM
   const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);                                          // Nombre total de pins PWM
   for (int i = 0; i < PWM_COUNT; i++) {
@@ -115,7 +107,6 @@ void setup() {
     analogWrite(S_PWM[i], 0);    // Éteindre la PWM
     delay(500);                  // Pause de 500 ms
   }
-
 }
 
 unsigned long lastReconnectCheck = 0;          // Dernière vérification de la connexion Wi-Fi
@@ -172,19 +163,47 @@ void loop() {
       wifiWebSocket.sendData(jsonData);
     }
 
-  /*=======================================*/
-  /*          surveillance gyro            */
-  /* si le 4x4 atteint un angle trop élevé */
-  /*=======================================*/
-  
-  if(abs(roll)>abs(limit_g_x)||abs(pitch)>abs(limit_g_y))
-  {
-    servo2->jumpTo(180);
-  }else{
-    servo2->jumpTo(0);
+    /*=======================================*/
+    /*          surveillance gyro            */
+    /* si le 4x4 atteint un angle trop élevé */
+    /*=======================================*/
+
+    if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
+      servo2->jumpTo(180);
+    } else {
+      servo2->jumpTo(0);
+    }
+
+    /*=======================================*/
+    /*          surveillance cligno          */
+    /*   tourne à gauche ou a droite         */
+    /*=======================================*/
+
+    Serial.print("Steer Data: ");
+    Serial.println(steer_data);  // Accéder directement à la donnée
+    if (steer_data > LVL_CLIGNOTANT_DROIT) {
+      clignotantDroit.run();
+      if (debug_output) {
+        Serial.print(steer_data);
+        Serial.print(" >  ");
+        Serial.print(LVL_CLIGNOTANT_DROIT);
+        Serial.println("    DROIT");
+      }
+    } else {
+      clignotantDroit.stop();
+    }
+    if (steer_data < LVL_CLIGNOTANT_GAUCHE) {
+      clignotantGauche.run();
+      if (debug_output) {
+        Serial.print(steer_data);
+        Serial.print(" <  ");
+        Serial.print(LVL_CLIGNOTANT_GAUCHE);
+        Serial.println("    GAUCHE");
+      }
+    } else {
+      clignotantGauche.stop();
+    }
   }
-    
-}
 
   // Boucle rapide
   static unsigned long lastFastLoop = 0;
@@ -193,7 +212,7 @@ void loop() {
 
 
     lastFastLoop = currentMillis;
-    
+
     wifiWebSocket.handle();
 
     if (!messageQueue.empty()) {
@@ -201,8 +220,7 @@ void loop() {
       handleMessage();
     }
 
-    clignotantGauche.run();
-    clignotantDroit.run();
+
     third_brake.stop();
     brakes.stop();
     HEADLIGHTS.stop();
@@ -318,4 +336,3 @@ void handleMessage() {
     Serial.println("Type de message non reconnu : " + type);
   }
 }
-
