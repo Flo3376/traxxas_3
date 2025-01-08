@@ -64,7 +64,7 @@ void setup() {
   servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);  // Pin 16, position initiale 0
 
   wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
-  setupGyro();  // Initialisation du gyroscope
+  setupGyro();            // Initialisation du gyroscope
 
   pinMode(channel_1, INPUT);
   pinMode(channel_2, INPUT);
@@ -123,7 +123,7 @@ void loop() {
       //String data_to_send = generateGyroJson();
       //wifiWebSocket.sendData(data_to_send);
     }
-    //wifiWebSocket.printWebSocketStatistics();
+  
   }
 
   // Boucle moyenne
@@ -186,7 +186,7 @@ void loop() {
     /*          surveillance frein           */
     /*            et accélérrateur           */
     /*=======================================*/
-    if(throttle_data<LVL_BRAKES){
+    if (throttle_data < LVL_BRAKES) {
       third_brake.run();
       brakes.run();
       if (debug_output) {
@@ -195,8 +195,7 @@ void loop() {
         Serial.print(LVL_BRAKES);
         Serial.println("    stop on");
       }
-    }
-    else{
+    } else {
       third_brake.stop();
       brakes.stop();
 
@@ -212,8 +211,10 @@ void loop() {
     /*    surveillance commodo éclairage     */
     /*  off/veilleuse/pahre/plein phare      */
     /*=======================================*/
-    Serial.print("Mode actuel de Light Mod : ");
-    Serial.println(light_mod_mode);
+    if (debug_output) {
+      Serial.print("Mode actuel de Light Mod : ");
+      Serial.println(light_mod_mode);
+    }
 
 
 
@@ -237,9 +238,6 @@ void loop() {
     }
 
 
-    //third_brake.stop();
-    //brakes.stop();
-    HEADLIGHTS.stop();
   }
 }
 
