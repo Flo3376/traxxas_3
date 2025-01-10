@@ -23,12 +23,12 @@ Clignotant clignotantDroit(PIN_CLIGNOTANT_DROIT, VITESSE_CLIGNOTANT_DROIT, ETAT_
 PWM_Light angelEyes(PIN_ANGEL_EYES, VITESSE_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES);
 
 //Initialisation Troisiéme feu stop
-TOR_Light third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE);
+PWM_Light third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE);
 //Initialisation feu stop
-TOR_Light brakes(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES);
+PWM_Light brakes(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES);
 
 //Initialisation des feu avants
-TOR_Light HEADLIGHTS(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS);
+PWM_Light HEADLIGHTS(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS);
 
 
 
@@ -215,11 +215,42 @@ void loop() {
       Serial.print("Mode actuel de Light Mod : ");
       Serial.println(light_mod_mode);
     }
+    switch (light_mod_mode) {
+        case 0: // Mode 0 : Tout éteint
+            HEADLIGHTS.setEtatBas(0);
+            HEADLIGHTS.stop();
+            angelEyes.stop();
+            brakes.setEtatBas(0);
+            clignotantGauche.setEtatBas(0); // Feu de position uniquement si américain
+            clignotantDroit.setEtatBas(0);
+            
+            break;
 
+        case 1: // Mode 1 : Veilleuses
+            angelEyes.run();
+            brakes.setEtatBas(128); // 50% pour feu stop
+            HEADLIGHTS.setEtatBas(77);   // 30% pour les phares
+            clignotantGauche.setEtatBas(american ? 128 : 0); // Feu de position uniquement si américain
+            clignotantDroit.setEtatBas(american ? 128 : 0);
+            break;
 
+        case 2: // Mode 2 : Phares
+            angelEyes.run();
+            brakes.setEtatBas(128); // 50% pour feu stop
+            HEADLIGHTS.setEtatBas(153);   // 60% pour les phares
+            clignotantGauche.setEtatBas(american ? 128 : 0); // Feu de position uniquement si américain
+            clignotantDroit.setEtatBas(american ? 128 : 0);
+            break;
 
-
-  }
+        case 3: // Mode 3 : Plein phares
+            angelEyes.run();
+            brakes.setEtatBas(128); // 50% pour feu stop
+            HEADLIGHTS.run();              // 100% pour les phares
+            clignotantGauche.setEtatBas(american ? 128 : 0); // Feu de position uniquement si américain
+            clignotantDroit.setEtatBas(american ? 128 : 0);
+            break;
+    }
+}
 
 
   // Boucle rapide
