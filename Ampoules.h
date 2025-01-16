@@ -269,4 +269,80 @@ public:
         return status;
     }
 };
+class Buzzer {
+private:
+    int pin;
+    unsigned long vitesse;        // Intervalle entre ON et OFF
+    unsigned long dernierChangement; // Temps du dernier changement d'état
+    bool actif;
+    bool etat;                    // État actuel (ON ou OFF)
+    bool forceActif;
+
+public:
+    Buzzer(int pinAssociee)
+        : pin(pinAssociee),  actif(false), forceActif(false) {
+        pinMode(pin, OUTPUT);
+        digitalWrite(pin, false);
+    }
+
+    void forceOutput(int valeur) {
+        if(valeur<0)
+        {
+          forceActif = false;
+        }
+        else{
+          forceActif = true;
+          //analogWrite(pin, valeur);
+        }
+    }
+
+    void disableForce() {
+        forceActif = false;
+    }
+
+    void run() {
+        if (forceActif) return;
+        
+        if (!actif) {
+              // Réactiver automatiquement le clignotant si inactif
+              actif = true;
+              dernierChangement = millis(); // Réinitialiser le timer
+              etat = false;                 // Repartir avec l'état bas
+              
+              //analogWrite(pin, etatBas);
+              //Serial.println("Clignotant réactivé");
+              return;
+          }
+
+          unsigned long currentMillis = millis();
+
+          // Vérifier si l'intervalle est écoulé
+          if (currentMillis - dernierChangement >= vitesse) {
+              dernierChangement = currentMillis; // Mettre à jour le timer
+              etat = !etat;                      // Basculer l'état ON/OFF
+              digitalWrite(pin, etat ? HIGH : LOW);
+
+              // Log de débogage
+              //Serial.print("Etat changé : ");
+              //Serial.println(etat ? "HAUT" : "BAS");
+          } else {
+              // Log pour suivre l'absence de changement
+              //Serial.println("Aucun changement d'état");
+          }
+        //digitalWrite(pin, true);
+    }
+
+    void stop() {
+        if (forceActif) return;
+        actif = false;
+        digitalWrite(pin, LOW);
+    }
+
+    String getStatus() {
+        String status = "Pin: " + String(pin);
+        status += ", État: " + String(actif ? "Allumé" : "Éteint");
+        status += ", Force Actif: " + String(forceActif ? "Oui" : "Non");
+        return status;
+    }
+};
 #endif

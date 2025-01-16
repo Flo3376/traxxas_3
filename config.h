@@ -14,17 +14,18 @@
 //  Gestion des Sorties //
 /*======================*/
 // sortie leds et buzzers !!ne pas modifier!!
-const int S_1_PWM = 32;
-const int S_2_PWM = 33;
+const int S_1_PWM = 32; 
+const int S_2_PWM = 33; //ANGEL_EYES
 const int S_3_PWM = 25;
 const int S_4_PWM = 26;
-const int S_5_PWM = 27;
-const int S_6_PWM = 14;
-const int S_7_PWM = 12;
-const int S_8_PWM = 13;
+const int S_5_PWM = 27; 
+const int S_6_PWM = 14; 
+const int S_7_PWM = 12; //CLIGNOTANT_DROIT
+const int S_8_PWM = 13; //CLIGNOTANT_GAUCHE
+const int S_9_PWM = 2; //réservé buzzer
 
 //config voiture principale
-const bool american = true; 
+const bool american = false; 
 
 // Variables globales
 const bool debug_output = false;
@@ -32,6 +33,15 @@ const bool debug_output = false;
 /*=======================================*/
 //  Configuration des roles des ampoules //
 /*=======================================*/
+
+// Configuration du buzzer
+const int PIN_BUZZER = S_9_PWM;  // Broche associée
+const unsigned long VITESSE_BUZZER = 500; // Intervalle en ms
+const int ETAT_BAS_BUZZER = 0;  // État bas (PWM)
+const int ETAT_HAUT_BUZZER = 255; // État haut (PWM)
+
+
+
 // Configuration du clignotant gauche
 const int PIN_CLIGNOTANT_GAUCHE = S_8_PWM;  // Broche associée
 const unsigned long VITESSE_CLIGNOTANT_GAUCHE = 500; // Intervalle en ms
@@ -56,20 +66,22 @@ const int ETAT_HAUT_ANGEL_EYES = 128;
 
 // Configuration du troisiéme feu stop
 const int PIN_THIRD_BRAKE = S_6_PWM;
+const unsigned long VITESSE_THIRD_BRAKE = 500;
 const int ETAT_BAS_THIRD_BRAKE = 5;
 const int ETAT_HAUT_THIRD_BRAKE = 255;
 
 // Configuration des stops
-const int PIN_BRAKES = S_5_PWM;
+const int PIN_BRAKES = S_3_PWM;
+const unsigned long VITESSE_BRAKES = 500;
 const int ETAT_BAS_BRAKES = 5;
 const int ETAT_HAUT_BRAKES = 255;
 const int LVL_BRAKES = -10;
 
 // Configuration des feu avants
 const int PIN_HEADLIGHTS = S_1_PWM;
+const unsigned long VITESSE_HEADLIGHTS = 500;
 const int ETAT_BAS_HEADLIGHTS = 5;
 const int ETAT_HAUT_HEADLIGHTS = 255;
-
 
 
 /*======================*/
@@ -77,8 +89,8 @@ const int ETAT_HAUT_HEADLIGHTS = 255;
 /*======================*/
 constexpr const char* car_name = "Hummer_Bob";
 constexpr const char* version_soft = "A1.0.0";
-constexpr const int input_u = 4;
-constexpr const int output_u = 8;
+constexpr const int input_u = 6;
+constexpr const int output_u = 9;
 
 
 /*======================*/
@@ -104,6 +116,11 @@ const int aux_serv_3 = 5;
 const int minPulse = 1000;
 const int maxPulse = 2000;
 
+/*======================*/
+//    Sortie alarm     //
+/*======================*/
+const bool hp_sound = false;
+const int hp_output = aux_serv_1;
 
 /*======================*/
 //  Gestion des entrées //
