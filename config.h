@@ -14,18 +14,18 @@
 //  Gestion des Sorties //
 /*======================*/
 // sortie leds et buzzers !!ne pas modifier!!
-const int S_1_PWM = 32; 
-const int S_2_PWM = 33; //ANGEL_EYES
-const int S_3_PWM = 25;
-const int S_4_PWM = 26;
-const int S_5_PWM = 27; 
-const int S_6_PWM = 14; 
-const int S_7_PWM = 12; //CLIGNOTANT_DROIT
-const int S_8_PWM = 13; //CLIGNOTANT_GAUCHE
+const int S_1_PWM = 32; //blanc AR Feu de recul
+const int S_2_PWM = 33; //bleu AR Stop
+const int S_3_PWM = 25; //vert AR Troisiéme feu stop
+const int S_4_PWM = 26; //vert AV barre led
+const int S_5_PWM = 27; //blanc AV  Phare
+const int S_6_PWM = 14; //bleu AV Angel Eye
+const int S_7_PWM = 12; //jaune AV AR CLIGNOTANT_DROIT
+const int S_8_PWM = 13; //jaune AV AR CLIGNOTANT_GAUCHE
 const int S_9_PWM = 2; //réservé buzzer
 
 //config voiture principale
-const bool american = false; 
+const bool american = true; 
 
 // Variables globales
 const bool debug_output = false;
@@ -59,29 +59,31 @@ const int LVL_CLIGNOTANT_DROIT = 45; // Seuil de déclenchement du clinotant (su
 
 
 // Configuration des Angel_eyes
-const int PIN_ANGEL_EYES = S_2_PWM;
+const int PIN_ANGEL_EYES = S_6_PWM;
 const unsigned long VITESSE_ANGEL_EYES = 500;
 const int ETAT_BAS_ANGEL_EYES = 5;
 const int ETAT_HAUT_ANGEL_EYES = 128;
 
+// Configuration des feu avants
+const int PIN_HEADLIGHTS = S_5_PWM;
+const unsigned long VITESSE_HEADLIGHTS = 500;
+const int ETAT_BAS_HEADLIGHTS = 5;
+const int ETAT_HAUT_HEADLIGHTS = 255;
+
 // Configuration du troisiéme feu stop
-const int PIN_THIRD_BRAKE = S_6_PWM;
-const unsigned long VITESSE_THIRD_BRAKE = 500;
+const int PIN_THIRD_BRAKE = S_3_PWM;
+const unsigned long VITESSE_THIRD_BRAKE = 250;
 const int ETAT_BAS_THIRD_BRAKE = 5;
 const int ETAT_HAUT_THIRD_BRAKE = 255;
 
 // Configuration des stops
-const int PIN_BRAKES = S_3_PWM;
-const unsigned long VITESSE_BRAKES = 500;
+const int PIN_BRAKES = S_2_PWM;
+const unsigned long VITESSE_BRAKES = 250;
 const int ETAT_BAS_BRAKES = 5;
 const int ETAT_HAUT_BRAKES = 255;
 const int LVL_BRAKES = -10;
 
-// Configuration des feu avants
-const int PIN_HEADLIGHTS = S_1_PWM;
-const unsigned long VITESSE_HEADLIGHTS = 500;
-const int ETAT_BAS_HEADLIGHTS = 5;
-const int ETAT_HAUT_HEADLIGHTS = 255;
+
 
 
 /*======================*/
@@ -128,14 +130,14 @@ const int hp_output = aux_serv_1;
 // Chaque entrée peu servir à surveiller quelque chose
 // mettre -1 pour non attribué, sinon mettre channel_1 ou channel_2 ou channel_3 ou ......
 const int steer = channel_3;
-const int throttle = channel_1;
-const int brake = channel_1;
+const int throttle = channel_2;
+const int brake = channel_2;
 const int gear_box = -1;
 const int front_diff = -1;
 const int rear_diff = -1;
 const int light = -1;
 const int winch = -1;
 const int horn = -1;
-const int light_mod= channel_2;
+const int light_mod= channel_1;
 
 #endif

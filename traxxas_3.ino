@@ -303,6 +303,8 @@ void loop() {
 
 
     lastFastLoop = currentMillis;
+    third_brake.update();
+      brakes.update();
 
     wifiWebSocket.handle();
 
