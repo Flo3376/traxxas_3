@@ -22,14 +22,11 @@ int transmit_mod = 1;
 
 
 // Initialisation des clignotants
-Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE,
-                         "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
-Ampoule clignotantDroit(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT,
-                        "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);
+Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE,"Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
+Ampoule clignotantDroit(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);
 
 // Initialisation de l'angel eyes
-Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES,
-                  "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
+Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES,"Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
 
 // Initialisation du troisième feu stop
 Ampoule third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE,
@@ -272,27 +269,6 @@ void loop() {
     /*          surveillance frein           */
     /*            et accélérrateur           */
     /*=======================================*/
-    /*if (throttle_data < LVL_BRAKES) {
-      third_brake.run();
-      brakes.run();
-      if (debug_output) {
-        Serial.print(throttle_data);
-        Serial.print(" <  ");
-        Serial.print(LVL_BRAKES);
-        Serial.println("    stop on");
-      }
-    } else {
-      third_brake.stop();
-      brakes.stop();
-
-      if (debug_output) {
-        Serial.print(throttle_data);
-        Serial.print(" >  ");
-        Serial.print(LVL_BRAKES);
-        Serial.println("    stop off");
-      }
-    }*/
-
     if (!traxxas) {
       // Mode Axial
       if (throttle_data > DEAD_ZONE) {
