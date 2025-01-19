@@ -9,29 +9,45 @@
 #include <queue>
 #include <ESP32Servo.h>  // Bibliothèque spécifique à l'ESP32
 
+bool blink = false;                       // Variable globale pour gérer la synchronisation
+unsigned long lastBlinkChange = 0;        // Chronomètre pour l'état de blink
+const unsigned long blinkInterval = 500;  // Intervalle de changement (ms)
+
+bool hasBraked = false;        // Indique si un freinage a été effectué (Traxxas seulement)
+bool possibleReverse = false;  // Indique si la marche arrière est possible après un freinage
+
 
 //mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
 int transmit_mod = 1;
 
 
-
 // Initialisation des clignotants
-Clignotant clignotantGauche(PIN_CLIGNOTANT_GAUCHE, VITESSE_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE);
-Clignotant clignotantDroit(PIN_CLIGNOTANT_DROIT, VITESSE_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT);
+Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE,
+                         "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
+Ampoule clignotantDroit(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT,
+                        "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);
 
 // Initialisation de l'angel eyes
-PWM_Light angelEyes(PIN_ANGEL_EYES, VITESSE_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES);
+Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES,
+                  "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
 
-//Initialisation Troisiéme feu stop
-PWM_Light third_brake(PIN_THIRD_BRAKE, VITESSE_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE);
-//Initialisation feu stop
-PWM_Light brakes(PIN_BRAKES, VITESSE_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES);
+// Initialisation du troisième feu stop
+Ampoule third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE,
+                    "Troisième Feu Stop", "PWM", VITESSE_THIRD_BRAKE);
 
-//Initialisation des feu avants
-PWM_Light HEADLIGHTS(PIN_HEADLIGHTS, VITESSE_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS);
+// Initialisation du feu stop
+Ampoule brakes(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES,
+               "Feu Stop", "PWM", VITESSE_BRAKES);
 
-//initialisation du buzzer
-Buzzer BUZZER_WARNING(PIN_BUZZER);
+// Initialisation des feux avant
+Ampoule HEADLIGHTS(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS,
+                   "Feux Avant", "PWM", VITESSE_HEADLIGHTS);
+
+// Initialisation du buzzer
+Ampoule BUZZER_WARNING(PIN_BUZZER, ETAT_BAS_BUZZER, ETAT_HAUT_BUZZER, "Buzzer", "BUZ", 0, VITESSE_BUZZER);
+
+// Initialisation du feu de recul
+Ampoule BACKWARD(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "PWM", 0, VITESSE_BACKWARD);
 
 
 
@@ -97,14 +113,26 @@ void setup() {
   /*=====================*/
   /*test des sortie pwm  */
   /*=====================*/
-  const int S_PWM[] = { S_1_PWM, S_2_PWM, S_3_PWM, S_4_PWM, S_5_PWM, S_6_PWM, S_7_PWM, S_8_PWM, };  // Tableau des pins PWM
-  const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);                                                   // Nombre total de pins PWM
+  const int S_PWM[] = {
+    S_1_PWM,
+    S_2_PWM,
+    S_3_PWM,
+    S_4_PWM,
+    S_5_PWM,
+    S_6_PWM,
+    S_7_PWM,
+    S_8_PWM,
+  };                                                       // Tableau des pins PWM
+  const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);  // Nombre total de pins PWM
   for (int i = 0; i < PWM_COUNT; i++) {
     analogWrite(S_PWM[i], 255);  // Allumer la PWM au maximum
     delay(500);                  // Pause de 500 ms
     analogWrite(S_PWM[i], 0);    // Éteindre la PWM
     delay(500);                  // Pause de 500 ms
   }
+  digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
+  delay(250);
+  digitalWrite(S_9_PWM, LOW);
 }
 
 unsigned long lastReconnectCheck = 0;          // Dernière vérification de la connexion Wi-Fi
@@ -112,6 +140,25 @@ const unsigned long reconnectInterval = 5000;  // Intervalle de 5 secondes pour 
 
 void loop() {
   unsigned long currentMillis = millis();
+  // Mise à jour de la variable blink toutes les 500 ms
+  if (currentMillis - lastBlinkChange >= blinkInterval) {
+    lastBlinkChange = currentMillis;
+    blink = !blink;  // Alterner entre true et false
+  }
+
+  third_brake.update(false);
+  delay(20);
+  brakes.update(false);
+  delay(20);
+  BUZZER_WARNING.update(blink);
+  delay(20);
+  clignotantGauche.update(blink);
+  delay(20);
+  clignotantDroit.update(blink);
+  delay(20);
+  BACKWARD.update(false);
+  delay(20);
+
 
   // Boucle lente
   static unsigned long lastSlowLoop = 0;
@@ -168,24 +215,22 @@ void loop() {
     if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
       tilted = true;
 
-      Serial.println("tilted");
+      //Serial.println("tilted");
 
-      clignotantDroit.run();
+
       clignotantGauche.run();
+      clignotantDroit.run();
       if (!hp_sound) {
         BUZZER_WARNING.run();
-        Serial.println("BUZZER");
+        //Serial.println("BUZZER");
       } else {
         servo1->jumpTo(180);
         delay(250);
         servo1->jumpTo(0);
         delay(100);
-
       }
     } else {
       tilted = false;
-      clignotantDroit.stop();
-      clignotantGauche.stop();
       if (!hp_sound) {
         BUZZER_WARNING.stop();
       } else {
@@ -198,8 +243,6 @@ void loop() {
     /*   tourne à gauche ou a droite         */
     /*=======================================*/
 
-    Serial.print("Steer Data: ");
-    Serial.println(steer_data);  // Accéder directement à la donnée
     if (!tilted) {
       if (steer_data > LVL_CLIGNOTANT_DROIT) {
         clignotantDroit.run();
@@ -229,7 +272,7 @@ void loop() {
     /*          surveillance frein           */
     /*            et accélérrateur           */
     /*=======================================*/
-    if (throttle_data < LVL_BRAKES) {
+    /*if (throttle_data < LVL_BRAKES) {
       third_brake.run();
       brakes.run();
       if (debug_output) {
@@ -247,6 +290,75 @@ void loop() {
         Serial.print(" >  ");
         Serial.print(LVL_BRAKES);
         Serial.println("    stop off");
+      }
+    }*/
+
+    if (!traxxas) {
+      // Mode Axial
+      if (throttle_data > DEAD_ZONE) {
+        third_brake.stop();
+        brakes.stop();
+        BACKWARD.stop();  // Pas de marche arrière
+        Serial.println("Axial : Avancer");
+        if(!tilted){BUZZER_WARNING.stop();}
+      } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
+        third_brake.run();
+        brakes.run();
+        BACKWARD.stop();
+        Serial.println("Axial : Frein");
+        if(!tilted){BUZZER_WARNING.stop();}
+      } else {  // throttle_data < -DEAD_ZONE
+        third_brake.stop();
+        brakes.stop();
+        BACKWARD.run();  // Marche arrière directe
+        BUZZER_WARNING.run();
+        Serial.println("Axial : Reculer");
+      }
+    } else {
+
+      // Mode Traxxas
+      if (throttle_data > DEAD_ZONE) {
+        // Avancer, réinitialiser tous les états
+        hasBraked = false;
+        possibleReverse = false;
+        third_brake.stop();
+        brakes.stop();
+        BACKWARD.stop();
+        if(!tilted){BUZZER_WARNING.stop();}
+        Serial.println("Traxxas : Avancer");
+      } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
+        // Décélération (pas de frein)
+        if (hasBraked) {
+          possibleReverse = true;  // Autorise la marche arrière après relâchement du frein
+          hasBraked = false;       // Réinitialise le freinage pour attendre une nouvelle impulsion
+          Serial.println("Traxxas : Frein relâché, marche arrière possible");
+        }
+        third_brake.stop();
+        brakes.stop();
+        BACKWARD.stop();
+        if(!tilted){BUZZER_WARNING.stop();}
+        Serial.println("Traxxas : Décélérer");
+      } else if(throttle_data < -DEAD_ZONE){  // throttle_data < -DEAD_ZONE
+        if (!hasBraked && !possibleReverse) {
+          // Première impulsion : Frein
+          hasBraked = true;
+          third_brake.run();
+          brakes.run();
+          BACKWARD.stop();
+          if(!tilted){BUZZER_WARNING.stop();}
+          
+          Serial.println("Traxxas : Freiner");
+        } else if (possibleReverse) {
+          // Seconde impulsion : Marche arrière
+          //hasBraked = false;
+          //possibleReverse = false;  // Marche arrière effectuée, réinitialiser les états
+          third_brake.stop();
+          brakes.stop();
+          BACKWARD.run();
+          BUZZER_WARNING.run();
+          Serial.println("Traxxas : Reculer");
+          
+        }
       }
     }
 
@@ -303,8 +415,7 @@ void loop() {
 
 
     lastFastLoop = currentMillis;
-    third_brake.update();
-      brakes.update();
+
 
     wifiWebSocket.handle();
 

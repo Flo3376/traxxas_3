@@ -45,7 +45,7 @@ const int ETAT_HAUT_BUZZER = 255; // État haut (PWM)
 // Configuration du clignotant gauche
 const int PIN_CLIGNOTANT_GAUCHE = S_8_PWM;  // Broche associée
 const unsigned long VITESSE_CLIGNOTANT_GAUCHE = 500; // Intervalle en ms
-const int ETAT_BAS_CLIGNOTANT_GAUCHE = 10;  // État bas (PWM)
+const int ETAT_BAS_CLIGNOTANT_GAUCHE = 0;  // État bas (PWM)
 const int ETAT_HAUT_CLIGNOTANT_GAUCHE = 255; // État haut (PWM)
 const int LVL_CLIGNOTANT_GAUCHE = -45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
 
@@ -53,7 +53,7 @@ const int LVL_CLIGNOTANT_GAUCHE = -45; // Seuil de déclenchement du clinotant (
 // Configuration du clignotant droit
 const int PIN_CLIGNOTANT_DROIT = S_7_PWM;
 const unsigned long VITESSE_CLIGNOTANT_DROIT = 500;
-const int ETAT_BAS_CLIGNOTANT_DROIT = 10;
+const int ETAT_BAS_CLIGNOTANT_DROIT = 0;
 const int ETAT_HAUT_CLIGNOTANT_DROIT = 255;
 const int LVL_CLIGNOTANT_DROIT = 45; // Seuil de déclenchement du clinotant (supérieur à 100 = jamais)
 
@@ -61,27 +61,38 @@ const int LVL_CLIGNOTANT_DROIT = 45; // Seuil de déclenchement du clinotant (su
 // Configuration des Angel_eyes
 const int PIN_ANGEL_EYES = S_6_PWM;
 const unsigned long VITESSE_ANGEL_EYES = 500;
-const int ETAT_BAS_ANGEL_EYES = 5;
+const int ETAT_BAS_ANGEL_EYES = 0;
 const int ETAT_HAUT_ANGEL_EYES = 128;
 
 // Configuration des feu avants
 const int PIN_HEADLIGHTS = S_5_PWM;
 const unsigned long VITESSE_HEADLIGHTS = 500;
-const int ETAT_BAS_HEADLIGHTS = 5;
+const int ETAT_BAS_HEADLIGHTS = 0;
 const int ETAT_HAUT_HEADLIGHTS = 255;
 
 // Configuration du troisiéme feu stop
 const int PIN_THIRD_BRAKE = S_3_PWM;
 const unsigned long VITESSE_THIRD_BRAKE = 250;
-const int ETAT_BAS_THIRD_BRAKE = 5;
+const int ETAT_BAS_THIRD_BRAKE = 0;
 const int ETAT_HAUT_THIRD_BRAKE = 255;
 
 // Configuration des stops
 const int PIN_BRAKES = S_2_PWM;
 const unsigned long VITESSE_BRAKES = 250;
-const int ETAT_BAS_BRAKES = 5;
+const int ETAT_BAS_BRAKES = 0;
 const int ETAT_HAUT_BRAKES = 255;
 const int LVL_BRAKES = -10;
+
+// Configuration des feux de recul
+const int PIN_BACKWARD = S_1_PWM;
+const unsigned long VITESSE_BACKWARD = 250;
+const int ETAT_BAS_BACKWARD = 0;
+const int ETAT_HAUT_BACKWARD = 255;
+const int LVL_BACKWARD = -10;
+
+// Configuration des zones mortes de l'accellérateur
+const bool traxxas = false; // Mode par défaut pour la marche arrière (Traxxas = true ou Axial = false)
+const int DEAD_ZONE = 3; // Plage de tolérance autour de zéro
 
 
 
