@@ -117,6 +117,10 @@ void Ampoule::stop() {
   }
 }
 
+bool  Ampoule::get_actif()
+{
+  return actif;
+  }
 // Méthode forceOutput
 void Ampoule::forceOutput(int valeur) {
   if (valeur < 0) {

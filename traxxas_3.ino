@@ -22,11 +22,11 @@ int transmit_mod = 1;
 
 
 // Initialisation des clignotants
-Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE,"Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
+Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE, "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
 Ampoule clignotantDroit(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);
 
 // Initialisation de l'angel eyes
-Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES,"Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
+Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES, "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
 
 // Initialisation du troisième feu stop
 Ampoule third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE,
@@ -212,9 +212,9 @@ void loop() {
     if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
       tilted = true;
 
-      //Serial.println("tilted");
-
-
+      if (debug_output) {
+        Serial.println("tilted");
+      }
       clignotantGauche.run();
       clignotantDroit.run();
       if (!hp_sound) {
@@ -276,13 +276,13 @@ void loop() {
         brakes.stop();
         BACKWARD.stop();  // Pas de marche arrière
         Serial.println("Axial : Avancer");
-        if(!tilted){BUZZER_WARNING.stop();}
+        if (!tilted) { BUZZER_WARNING.stop(); }
       } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
         third_brake.run();
         brakes.run();
         BACKWARD.stop();
         Serial.println("Axial : Frein");
-        if(!tilted){BUZZER_WARNING.stop();}
+        if (!tilted) { BUZZER_WARNING.stop(); }
       } else {  // throttle_data < -DEAD_ZONE
         third_brake.stop();
         brakes.stop();
@@ -300,7 +300,7 @@ void loop() {
         third_brake.stop();
         brakes.stop();
         BACKWARD.stop();
-        if(!tilted){BUZZER_WARNING.stop();}
+        if (!tilted) { BUZZER_WARNING.stop(); }
         Serial.println("Traxxas : Avancer");
       } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
         // Décélération (pas de frein)
@@ -312,17 +312,17 @@ void loop() {
         third_brake.stop();
         brakes.stop();
         BACKWARD.stop();
-        if(!tilted){BUZZER_WARNING.stop();}
+        if (!tilted) { BUZZER_WARNING.stop(); }
         Serial.println("Traxxas : Décélérer");
-      } else if(throttle_data < -DEAD_ZONE){  // throttle_data < -DEAD_ZONE
+      } else if (throttle_data < -DEAD_ZONE) {  // throttle_data < -DEAD_ZONE
         if (!hasBraked && !possibleReverse) {
           // Première impulsion : Frein
           hasBraked = true;
           third_brake.run();
           brakes.run();
           BACKWARD.stop();
-          if(!tilted){BUZZER_WARNING.stop();}
-          
+          if (!tilted) { BUZZER_WARNING.stop(); }
+
           Serial.println("Traxxas : Freiner");
         } else if (possibleReverse) {
           // Seconde impulsion : Marche arrière
@@ -333,7 +333,6 @@ void loop() {
           BACKWARD.run();
           BUZZER_WARNING.run();
           Serial.println("Traxxas : Reculer");
-          
         }
       }
     }
@@ -359,26 +358,51 @@ void loop() {
 
       case 1:  // Mode 1 : Veilleuses
         angelEyes.run();
-        brakes.setEtatBas(128);                           // 50% pour feu stop
-        HEADLIGHTS.setEtatBas(77);                        // 30% pour les phares
-        clignotantGauche.setEtatBas(american ? 128 : 0);  // Feu de position uniquement si américain
-        clignotantDroit.setEtatBas(american ? 128 : 0);
+        brakes.setEtatBas(128);     // 50% pour feu stop
+        HEADLIGHTS.setEtatBas(25);  // 30% pour les phares
+        if (clignotantGauche.get_actif()) {
+          clignotantGauche.setEtatBas(0);
+        } else {
+          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+        }
+        if (clignotantDroit.get_actif()) {
+          clignotantDroit.setEtatBas(0);
+        } else {
+          clignotantDroit.setEtatBas(american ? 40 : 0);
+        }
         break;
 
       case 2:  // Mode 2 : Phares
         angelEyes.run();
-        brakes.setEtatBas(128);                           // 50% pour feu stop
-        HEADLIGHTS.setEtatBas(153);                       // 60% pour les phares
-        clignotantGauche.setEtatBas(american ? 128 : 0);  // Feu de position uniquement si américain
-        clignotantDroit.setEtatBas(american ? 128 : 0);
+        brakes.setEtatBas(128);  // 50% pour feu stop
+        HEADLIGHTS.setEtatBas(80);
+        if (clignotantGauche.get_actif()) {
+          clignotantGauche.setEtatBas(0);
+
+        } else {
+          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+        }
+        if (clignotantDroit.get_actif()) {
+          clignotantDroit.setEtatBas(0);
+        } else {
+          clignotantDroit.setEtatBas(american ? 40 : 0);
+        }
         break;
 
       case 3:  // Mode 3 : Plein phares
         angelEyes.run();
-        brakes.setEtatBas(128);                           // 50% pour feu stop
-        HEADLIGHTS.run();                                 // 100% pour les phares
-        clignotantGauche.setEtatBas(american ? 128 : 0);  // Feu de position uniquement si américain
-        clignotantDroit.setEtatBas(american ? 128 : 0);
+        brakes.setEtatBas(128);  // 50% pour feu stop
+        HEADLIGHTS.run();        // 100% pour les phares
+        if (clignotantGauche.get_actif()) {
+          clignotantGauche.setEtatBas(0);
+        } else {
+          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+        }
+        if (clignotantDroit.get_actif()) {
+          clignotantDroit.setEtatBas(0);
+        } else {
+          clignotantDroit.setEtatBas(american ? 40 : 0);
+        }
         break;
     }
   }

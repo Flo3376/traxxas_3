@@ -24,6 +24,7 @@ public:
 
     void run();
     void stop();
+    bool  get_actif();
     void forceOutput(int valeur);
     void update(bool blinkState);
     void setEtatBas(int bas);
