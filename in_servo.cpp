@@ -20,6 +20,35 @@ int light_mod_data = -1;
 int prev_light_mod_data = 0;
 int light_mod_mode = 0; // Définition de la variable
 
+// Variables globales pour surveiller le throttle
+int last_significant_throttle = 0;
+unsigned long last_activity_time = millis();
+VehicleMode vehicle_mode = WAIT; // Définition de la variable globale
+
+void monitorThrottle() {
+    int current_throttle = throttle_data; // Valeur actuelle du throttle
+    unsigned long current_time = millis();
+
+    // Vérifier si la variation est significative
+    if (abs(current_throttle - last_significant_throttle) > 5) {
+        last_significant_throttle = current_throttle; // Mise à jour de la valeur significative
+        last_activity_time = current_time;           // Réinitialiser le compteur
+    }
+
+    // Calculer le temps écoulé depuis la dernière activité
+    unsigned long inactivity_duration = current_time - last_activity_time;
+
+    // Mettre à jour le statut en fonction de l'inactivité
+    if (inactivity_duration > FORGET_TIMEOUT) {
+        vehicle_mode = FORGET;
+    } else if (inactivity_duration > WAIT_TIMEOUT) {
+        vehicle_mode = WAIT;
+    } else {
+        vehicle_mode = NORMAL;
+    }
+}
+
+
 // Implémentation des fonctions
 int readPWM(int pin) {
 

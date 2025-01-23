@@ -46,5 +46,6 @@ int readPWM(int pin);
 String generateServoJson();
 void updateChannels();
 int getChannelData(int channel);
+void monitorThrottle() ;
 
 #endif

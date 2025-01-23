@@ -91,7 +91,7 @@ const int ETAT_HAUT_BACKWARD = 255;
 const int LVL_BACKWARD = -10;
 
 // Configuration des zones mortes de l'accellérateur
-const bool traxxas = false; // Mode par défaut pour la marche arrière (Traxxas = true ou Axial = false)
+const bool traxxas = true; // Mode par défaut pour la marche arrière (Traxxas = true ou Axial = false)
 const int DEAD_ZONE = 3; // Plage de tolérance autour de zéro
 
 
@@ -150,5 +150,14 @@ const int light = -1;
 const int winch = -1;
 const int horn = -1;
 const int light_mod= channel_1;
+
+// Délais pour les modes veilles
+const unsigned long WAIT_TIMEOUT = 20000;  // 20 secondes
+//const unsigned long FORGET_TIMEOUT = 900000; // 15 minutes
+const unsigned long FORGET_TIMEOUT = 40000; // 15 minutes
+
+// États possibles de la voiture
+enum VehicleMode { NORMAL, WAIT, FORGET };
+extern VehicleMode vehicle_mode;
 
 #endif

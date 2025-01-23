@@ -144,15 +144,10 @@ void loop() {
   }
 
   third_brake.update(false);
-  delay(20);
   brakes.update(false);
-  delay(20);
   BUZZER_WARNING.update(blink);
-  delay(20);
   clignotantGauche.update(blink);
-  delay(20);
   clignotantDroit.update(blink);
-  delay(20);
   BACKWARD.update(false);
   delay(20);
 
@@ -162,6 +157,23 @@ void loop() {
   const unsigned long slowInterval = 10000;  // 10 secondes
   if (currentMillis - lastSlowLoop >= slowInterval) {
     lastSlowLoop = currentMillis;
+
+    switch (vehicle_mode) {
+      case NORMAL:
+        // Scénario normal
+        Serial.println("Normal");
+        break;
+
+      case WAIT:
+        // Scénario pour WAIT (inclure des délais si nécessaire)
+        Serial.println("WAIT");
+        break;
+
+      case FORGET:
+        // Scénario pour FORGET (inclut WAIT + bip sonore)
+        Serial.println("FORGET");
+        break;
+    }
 
 
     if (transmit_mod == 1) {
@@ -194,6 +206,7 @@ void loop() {
   if (currentMillis - lastMediumLoop >= mediumInterval) {
     lastMediumLoop = currentMillis;
     updateChannels();
+    monitorThrottle();
     readGyro();
     if (transmit_mod == 2) {
       String data_to_send = generateGyroJson();
@@ -203,207 +216,213 @@ void loop() {
       String jsonData = generateServoJson();
       wifiWebSocket.sendData(jsonData);
     }
+    if (vehicle_mode == NORMAL) {
+      /*=======================================*/
+      /*          surveillance gyro            */
+      /* si le 4x4 atteint un angle trop élevé */
+      /*=======================================*/
 
-    /*=======================================*/
-    /*          surveillance gyro            */
-    /* si le 4x4 atteint un angle trop élevé */
-    /*=======================================*/
+      if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
+        tilted = true;
 
-    if (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y)) {
-      tilted = true;
-
-      if (debug_output) {
-        Serial.println("tilted");
-      }
-      clignotantGauche.run();
-      clignotantDroit.run();
-      if (!hp_sound) {
-        BUZZER_WARNING.run();
-        //Serial.println("BUZZER");
-      } else {
-        servo1->jumpTo(180);
-        delay(250);
-        servo1->jumpTo(0);
-        delay(100);
-      }
-    } else {
-      tilted = false;
-      if (!hp_sound) {
-        BUZZER_WARNING.stop();
-      } else {
-        servo1->jumpTo(0);
-      }
-    }
-
-    /*=======================================*/
-    /*          surveillance cligno          */
-    /*   tourne à gauche ou a droite         */
-    /*=======================================*/
-
-    if (!tilted) {
-      if (steer_data > LVL_CLIGNOTANT_DROIT) {
-        clignotantDroit.run();
         if (debug_output) {
-          Serial.print(steer_data);
-          Serial.print(" >  ");
-          Serial.print(LVL_CLIGNOTANT_DROIT);
-          Serial.println("    DROIT");
+          Serial.println("tilted");
         }
-      } else {
-        clignotantDroit.stop();
-      }
-      if (steer_data < LVL_CLIGNOTANT_GAUCHE) {
         clignotantGauche.run();
-        if (debug_output) {
-          Serial.print(steer_data);
-          Serial.print(" <  ");
-          Serial.print(LVL_CLIGNOTANT_GAUCHE);
-          Serial.println("    GAUCHE");
+        clignotantDroit.run();
+        if (!hp_sound) {
+          BUZZER_WARNING.run();
+          //Serial.println("BUZZER");
+        } else {
+          servo1->jumpTo(180);
+          delay(250);
+          servo1->jumpTo(0);
+          delay(100);
         }
       } else {
-        clignotantGauche.stop();
-      }
-    }
-
-    /*=======================================*/
-    /*          surveillance frein           */
-    /*            et accélérrateur           */
-    /*=======================================*/
-    if (!traxxas) {
-      // Mode Axial
-      if (throttle_data > DEAD_ZONE) {
-        third_brake.stop();
-        brakes.stop();
-        BACKWARD.stop();  // Pas de marche arrière
-        Serial.println("Axial : Avancer");
-        if (!tilted) { BUZZER_WARNING.stop(); }
-      } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
-        third_brake.run();
-        brakes.run();
-        BACKWARD.stop();
-        Serial.println("Axial : Frein");
-        if (!tilted) { BUZZER_WARNING.stop(); }
-      } else {  // throttle_data < -DEAD_ZONE
-        third_brake.stop();
-        brakes.stop();
-        BACKWARD.run();  // Marche arrière directe
-        BUZZER_WARNING.run();
-        Serial.println("Axial : Reculer");
-      }
-    } else {
-
-      // Mode Traxxas
-      if (throttle_data > DEAD_ZONE) {
-        // Avancer, réinitialiser tous les états
-        hasBraked = false;
-        possibleReverse = false;
-        third_brake.stop();
-        brakes.stop();
-        BACKWARD.stop();
-        if (!tilted) { BUZZER_WARNING.stop(); }
-        Serial.println("Traxxas : Avancer");
-      } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
-        // Décélération (pas de frein)
-        if (hasBraked) {
-          possibleReverse = true;  // Autorise la marche arrière après relâchement du frein
-          hasBraked = false;       // Réinitialise le freinage pour attendre une nouvelle impulsion
-          Serial.println("Traxxas : Frein relâché, marche arrière possible");
+        tilted = false;
+        if (!hp_sound) {
+          BUZZER_WARNING.stop();
+        } else {
+          servo1->jumpTo(0);
         }
-        third_brake.stop();
-        brakes.stop();
-        BACKWARD.stop();
-        if (!tilted) { BUZZER_WARNING.stop(); }
-        Serial.println("Traxxas : Décélérer");
-      } else if (throttle_data < -DEAD_ZONE) {  // throttle_data < -DEAD_ZONE
-        if (!hasBraked && !possibleReverse) {
-          // Première impulsion : Frein
-          hasBraked = true;
+      }
+
+      /*=======================================*/
+      /*          surveillance cligno          */
+      /*   tourne à gauche ou a droite         */
+      /*=======================================*/
+
+      if (!tilted) {
+        if (steer_data > LVL_CLIGNOTANT_DROIT) {
+          clignotantDroit.run();
+          if (debug_output) {
+            Serial.print(steer_data);
+            Serial.print(" >  ");
+            Serial.print(LVL_CLIGNOTANT_DROIT);
+            Serial.println("    DROIT");
+          }
+        } else {
+          clignotantDroit.stop();
+        }
+        if (steer_data < LVL_CLIGNOTANT_GAUCHE) {
+          clignotantGauche.run();
+          if (debug_output) {
+            Serial.print(steer_data);
+            Serial.print(" <  ");
+            Serial.print(LVL_CLIGNOTANT_GAUCHE);
+            Serial.println("    GAUCHE");
+          }
+        } else {
+          clignotantGauche.stop();
+        }
+      }
+
+      /*=======================================*/
+      /*          surveillance frein           */
+      /*            et accélérrateur           */
+      /*=======================================*/
+      if (!traxxas) {
+        // Mode Axial
+        if (throttle_data > DEAD_ZONE) {
+          third_brake.stop();
+          brakes.stop();
+          BACKWARD.stop();  // Pas de marche arrière
+          //Serial.println("Axial : Avancer");
+          if (!tilted) { BUZZER_WARNING.stop(); }
+        } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
           third_brake.run();
           brakes.run();
           BACKWARD.stop();
+          //Serial.println("Axial : Frein");
           if (!tilted) { BUZZER_WARNING.stop(); }
-
-          Serial.println("Traxxas : Freiner");
-        } else if (possibleReverse) {
-          // Seconde impulsion : Marche arrière
-          //hasBraked = false;
-          //possibleReverse = false;  // Marche arrière effectuée, réinitialiser les états
+        } else {  // throttle_data < -DEAD_ZONE
           third_brake.stop();
           brakes.stop();
-          BACKWARD.run();
+          BACKWARD.run();  // Marche arrière directe
           BUZZER_WARNING.run();
-          Serial.println("Traxxas : Reculer");
+          //Serial.println("Axial : Reculer");
+        }
+      } else {
+
+        // Mode Traxxas
+        if (throttle_data > DEAD_ZONE) {
+          // Avancer, réinitialiser tous les états
+          hasBraked = false;
+          possibleReverse = false;
+          third_brake.stop();
+          brakes.stop();
+          BACKWARD.stop();
+          if (!tilted) { BUZZER_WARNING.stop(); }
+          //Serial.println("Traxxas : Avancer");
+        } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
+          // Décélération (pas de frein)
+          if (hasBraked) {
+            possibleReverse = true;  // Autorise la marche arrière après relâchement du frein
+            hasBraked = false;       // Réinitialise le freinage pour attendre une nouvelle impulsion
+            Serial.println("Traxxas : Frein relâché, marche arrière possible");
+          }
+          third_brake.stop();
+          brakes.stop();
+          BACKWARD.stop();
+          if (!tilted) { BUZZER_WARNING.stop(); }
+          //Serial.println("Traxxas : Décélérer");
+        } else if (throttle_data < -DEAD_ZONE) {  // throttle_data < -DEAD_ZONE
+          if (!hasBraked && !possibleReverse) {
+            // Première impulsion : Frein
+            hasBraked = true;
+            third_brake.run();
+            brakes.run();
+            BACKWARD.stop();
+            if (!tilted) { BUZZER_WARNING.stop(); }
+
+            //Serial.println("Traxxas : Freiner");
+          } else if (possibleReverse) {
+            // Seconde impulsion : Marche arrière
+            //hasBraked = false;
+            //possibleReverse = false;  // Marche arrière effectuée, réinitialiser les états
+            third_brake.stop();
+            brakes.stop();
+            BACKWARD.run();
+            BUZZER_WARNING.run();
+            //Serial.println("Traxxas : Reculer");
+          }
         }
       }
-    }
 
-    /*=======================================*/
-    /*    surveillance commodo éclairage     */
-    /*  off/veilleuse/pahre/plein phare      */
-    /*=======================================*/
-    if (debug_output) {
-      Serial.print("Mode actuel de Light Mod : ");
-      Serial.println(light_mod_mode);
-    }
-    switch (light_mod_mode) {
-      case 0:  // Mode 0 : Tout éteint
-        HEADLIGHTS.setEtatBas(0);
-        HEADLIGHTS.stop();
-        angelEyes.stop();
-        brakes.setEtatBas(0);
-        clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
-        clignotantDroit.setEtatBas(0);
-
-        break;
-
-      case 1:  // Mode 1 : Veilleuses
-        angelEyes.run();
-        brakes.setEtatBas(128);     // 50% pour feu stop
-        HEADLIGHTS.setEtatBas(25);  // 30% pour les phares
-        if (clignotantGauche.get_actif()) {
-          clignotantGauche.setEtatBas(0);
-        } else {
-          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
-        }
-        if (clignotantDroit.get_actif()) {
+      /*=======================================*/
+      /*    surveillance commodo éclairage     */
+      /*  off/veilleuse/pahre/plein phare      */
+      /*=======================================*/
+      if (debug_output) {
+        Serial.print("Mode actuel de Light Mod : ");
+        Serial.println(light_mod_mode);
+      }
+      switch (light_mod_mode) {
+        case 0:  // Mode 0 : Tout éteint
+          HEADLIGHTS.setEtatBas(0);
+          HEADLIGHTS.stop();
+          angelEyes.stop();
+          brakes.setEtatBas(0);
+          clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
           clignotantDroit.setEtatBas(0);
-        } else {
-          clignotantDroit.setEtatBas(american ? 40 : 0);
-        }
-        break;
 
-      case 2:  // Mode 2 : Phares
-        angelEyes.run();
-        brakes.setEtatBas(128);  // 50% pour feu stop
-        HEADLIGHTS.setEtatBas(80);
-        if (clignotantGauche.get_actif()) {
-          clignotantGauche.setEtatBas(0);
+          break;
 
-        } else {
-          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
-        }
-        if (clignotantDroit.get_actif()) {
-          clignotantDroit.setEtatBas(0);
-        } else {
-          clignotantDroit.setEtatBas(american ? 40 : 0);
-        }
-        break;
+        case 1:  // Mode 1 : Veilleuses
+          angelEyes.run();
+          brakes.setEtatBas(128);     // 50% pour feu stop
+          HEADLIGHTS.setEtatBas(25);  // 30% pour les phares
+          if (clignotantGauche.get_actif()) {
+            clignotantGauche.setEtatBas(0);
+          } else {
+            clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+          }
+          if (clignotantDroit.get_actif()) {
+            clignotantDroit.setEtatBas(0);
+          } else {
+            clignotantDroit.setEtatBas(american ? 40 : 0);
+          }
+          break;
 
-      case 3:  // Mode 3 : Plein phares
-        angelEyes.run();
-        brakes.setEtatBas(128);  // 50% pour feu stop
-        HEADLIGHTS.run();        // 100% pour les phares
-        if (clignotantGauche.get_actif()) {
-          clignotantGauche.setEtatBas(0);
-        } else {
-          clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
-        }
-        if (clignotantDroit.get_actif()) {
-          clignotantDroit.setEtatBas(0);
-        } else {
-          clignotantDroit.setEtatBas(american ? 40 : 0);
-        }
-        break;
+        case 2:  // Mode 2 : Phares
+          angelEyes.run();
+          brakes.setEtatBas(128);  // 50% pour feu stop
+          HEADLIGHTS.setEtatBas(80);
+          if (clignotantGauche.get_actif()) {
+            clignotantGauche.setEtatBas(0);
+
+          } else {
+            clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+          }
+          if (clignotantDroit.get_actif()) {
+            clignotantDroit.setEtatBas(0);
+          } else {
+            clignotantDroit.setEtatBas(american ? 40 : 0);
+          }
+          break;
+
+        case 3:  // Mode 3 : Plein phares
+          angelEyes.run();
+          brakes.setEtatBas(128);  // 50% pour feu stop
+          HEADLIGHTS.run();        // 100% pour les phares
+          if (clignotantGauche.get_actif()) {
+            clignotantGauche.setEtatBas(0);
+          } else {
+            clignotantGauche.setEtatBas(american ? 40 : 0);  // Feu de position uniquement si américain
+          }
+          if (clignotantDroit.get_actif()) {
+            clignotantDroit.setEtatBas(0);
+          } else {
+            clignotantDroit.setEtatBas(american ? 40 : 0);
+          }
+          break;
+      }
+    } else if (vehicle_mode == WAIT) {
+      clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
+      clignotantDroit.setEtatBas(0);
+      clignotantGauche.run();
+      clignotantDroit.run();
     }
   }
 
