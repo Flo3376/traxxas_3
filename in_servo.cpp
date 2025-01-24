@@ -20,10 +20,12 @@ int light_mod_data = -1;
 int prev_light_mod_data = 0;
 int light_mod_mode = 0; // Définition de la variable
 
+
 // Variables globales pour surveiller le throttle
 int last_significant_throttle = 0;
 unsigned long last_activity_time = millis();
-VehicleMode vehicle_mode = WAIT; // Définition de la variable globale
+VehiculeMode vehicule_mode = WAIT; // Définition de la variable globale
+VehiculeMode last_vehicule_mode = WAIT; // Initialisé à NORMAL par défaut
 
 void monitorThrottle() {
     int current_throttle = throttle_data; // Valeur actuelle du throttle
@@ -40,12 +42,28 @@ void monitorThrottle() {
 
     // Mettre à jour le statut en fonction de l'inactivité
     if (inactivity_duration > FORGET_TIMEOUT) {
-        vehicle_mode = FORGET;
+       if(last_vehicule_mode!=FORGET)
+       {
+        vehicule_mode = FORGET;
+        Serial.println("Passage en mod FORGET");
+       }
+        
     } else if (inactivity_duration > WAIT_TIMEOUT) {
-        vehicle_mode = WAIT;
+      if(last_vehicule_mode!=WAIT)
+       {
+        vehicule_mode = WAIT;
+        Serial.println("Passage en mod WAIT");
+       }
+        
     } else {
-        vehicle_mode = NORMAL;
+      if(last_vehicule_mode!=NORMAL)
+       {
+        vehicule_mode = NORMAL;
+        Serial.println("Passage en mod NORMAL");
+       }
     }
+    // Mettre à jour le dernier mode connu
+    last_vehicule_mode = vehicule_mode;
 }
 
 
@@ -136,6 +154,19 @@ int getChannelData(int channel) {
     case channel_6: return data_channels[5];
     default: return 0;
   }
+}
+
+const char* vehiculeModeToString(VehiculeMode mode) {
+    switch (mode) {
+        case NORMAL:
+            return "NORMAL";
+        case WAIT:
+            return "WAIT";
+        case FORGET:
+            return "FORGET";
+        default:
+            return "UNKNOWN";
+    }
 }
 
 String generateServoJson() {

@@ -2,6 +2,7 @@
 #define In_SERVO_H
 
 #include <ArduinoJson.h>
+#include "config.h"
 
 // Définition de constantes et déclarations externes
 extern bool Debug_Input_Servo;
@@ -47,5 +48,7 @@ String generateServoJson();
 void updateChannels();
 int getChannelData(int channel);
 void monitorThrottle() ;
+extern VehiculeMode last_vehicule_mode; // Dernier mode connu
+const char* vehiculeModeToString(VehiculeMode mode);
 
 #endif

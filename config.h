@@ -14,15 +14,15 @@
 //  Gestion des Sorties //
 /*======================*/
 // sortie leds et buzzers !!ne pas modifier!!
-const int S_1_PWM = 32; //blanc AR Feu de recul
-const int S_2_PWM = 33; //bleu AR Stop
-const int S_3_PWM = 25; //vert AR Troisiéme feu stop
-const int S_4_PWM = 26; //vert AV barre led
-const int S_5_PWM = 27; //blanc AV  Phare
-const int S_6_PWM = 14; //bleu AV Angel Eye
-const int S_7_PWM = 12; //jaune AV AR CLIGNOTANT_DROIT
-const int S_8_PWM = 13; //jaune AV AR CLIGNOTANT_GAUCHE
-const int S_9_PWM = 2; //réservé buzzer
+const int S_1_PWM = 32;		//blanc AR Feu de recul
+const int S_2_PWM = 33;		//bleu AR Stop
+const int S_3_PWM = 25;		//vert AR Troisiéme feu stop
+const int S_4_PWM = 26; 	//vert AV barre led
+const int S_5_PWM = 27; 	//blanc AV  Phare
+const int S_6_PWM = 14; 	//bleu AV Angel Eye
+const int S_7_PWM = 12; 	//jaune AV AR CLIGNOTANT_DROIT
+const int S_8_PWM = 13; 	//jaune AV AR CLIGNOTANT_GAUCHE
+const int S_9_PWM = 2; 		//réservé buzzer
 
 //config voiture principale
 const bool american = true; 
@@ -151,13 +151,37 @@ const int winch = -1;
 const int horn = -1;
 const int light_mod= channel_1;
 
+/*======================*/
+//     Mods veilles     //
+/*======================*/
+
 // Délais pour les modes veilles
 const unsigned long WAIT_TIMEOUT = 20000;  // 20 secondes
 //const unsigned long FORGET_TIMEOUT = 900000; // 15 minutes
-const unsigned long FORGET_TIMEOUT = 40000; // 15 minutes
+const unsigned long FORGET_TIMEOUT = 40000; // 40s
 
 // États possibles de la voiture
-enum VehicleMode { NORMAL, WAIT, FORGET };
-extern VehicleMode vehicle_mode;
+enum VehiculeMode { NORMAL, WAIT, FORGET };
+extern VehiculeMode vehicule_mode;
+extern VehiculeMode last_vehicule_mode;
+
+
+/*=====================================*/
+//    différent timer ne pas toucher   //
+/*=====================================*/
+//le programme a des taches qui s'execute à différente cadence (boucle lente/rapide/moyenne)
+const unsigned long Interval_50= 50;
+const unsigned long Interval_250= 250;
+const unsigned long Interval_500= 500;
+const unsigned long Interval_1000= 1000;
+const unsigned long Interval_10000= 10000;
+
+const unsigned long interval = 250;
+const unsigned long interval_5s = 5000;
+const unsigned long reconnectInterval = 5000;  // Intervalle de 5 secondes pour tenter une reconnexion
+const unsigned long slowInterval = 10000;  // 10 secondes
+const unsigned long mediumInterval = 250;  // 250 ms
+const unsigned long fastInterval = 50;  // 50 ms
+
 
 #endif

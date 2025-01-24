@@ -3,57 +3,30 @@
 
 
 // Constructeur
-Ampoule::Ampoule(int pinAssociee, int bas, int haut, String nomAmpoule,
-                 String mode, unsigned long transition, unsigned long interval) {
-  pin = pinAssociee;
-  etatBas = bas < 0 ? 0 : bas;
-  etatHaut = haut > 255 ? 255 : haut;
-  nom = nomAmpoule;
-  methode = mode;
+Ampoule::Ampoule() : pin(-1), etatBas(0), etatHaut(0), nom(""), methode(""),
+                     tempsTransition(0), intervalCommutation(0), etat(false),
+                     actif(false), forcerActif(false), valeurForcee(-1) {}
 
-  if (methode != "TOR" && methode != "PWM" && methode != "CLI" && methode != "BUZ") {
-    Serial.println("Mode invalide. Réinitialisé à TOR.");
-    methode = "TOR";
-  }
+void Ampoule::init(int pinAssociee, int bas, int haut, String nomAmpoule,
+                   String mode, unsigned long transition, unsigned long interval) {
+    pin = pinAssociee;
+    etatBas = bas < 0 ? 0 : bas;
+    etatHaut = haut > 255 ? 255 : haut;
+    nom = nomAmpoule;
+    methode = mode;
 
-  if (methode == "TOR" || methode == "CLI") {
-    tempsTransition = 0;
-  } else {
-    if (transition <= 0) {
-      Serial.println("tempsTransition invalide. Valeur par défaut appliquée : 100 ms.");
-      tempsTransition = 100;
-    } else {
-      tempsTransition = transition;
+    if (methode != "TOR" && methode != "PWM" && methode != "CLI" && methode != "BUZ") {
+        Serial.println("Mode invalide. Réinitialisé à TOR.");
+        methode = "TOR";
     }
-  }
 
-  if (methode == "PWM") {
-    intervalCommutation = 0;
-  } else {
-    if (interval < 10) {
-      Serial.println("intervalCommutation trop court. Valeur par défaut appliquée : 500 ms.");
-      intervalCommutation = 500;
-    } else {
-      intervalCommutation = interval;
-    }
-  }
+    tempsTransition = (methode == "PWM" || transition > 0) ? transition : 100;
+    intervalCommutation = (methode == "BUZ" && interval < 10) ? 500 : interval;
 
-  if (methode == "BUZ") {
-    tempsTransition = 0;  // Pas de transition pour un buzzer
-    if (interval < 10) {
-      Serial.println("intervalCommutation trop court pour le buzzer. Valeur par défaut : 500 ms.");
-      intervalCommutation = 500;  // Valeur par défaut pour BUZ
-    } else {
-      intervalCommutation = interval;
-    }
-  }
-
-  etat = false;
-  actif = false;
-  forcerActif = false;
-  valeurForcee = -1;
-   // Initialisation du timer pour cet objet spécifique
-  //dernierChangement = millis();  // On enregistre le moment de création
+    etat = false;
+    actif = false;
+    forcerActif = false;
+    valeurForcee = -1;
 }
 
 // Définir etatBas

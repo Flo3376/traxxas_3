@@ -19,8 +19,14 @@ private:
     unsigned long dernierChangement;
 
 public:
+    Ampoule(); // Constructeur par défaut
     Ampoule(int pinAssociee, int bas, int haut, String nomAmpoule,
             String mode, unsigned long transition = 0, unsigned long interval = 0);
+
+    void init(int pinAssociee, int bas, int haut, String nomAmpoule,
+              String mode, unsigned long transition = 0, unsigned long interval = 0);
+
+    
 
     void run();
     void stop();

@@ -1,87 +1,97 @@
-#include "WiFiWebSocket.h"
-#include <ArduinoJson.h>
+/*======================*/
+//     Lib Externe      //
+/*======================*/
+#include <ESP32Servo.h>   // Lib spécifique à l'ESP32
+#include <queue>          // Lib pour les message en file d'attende
+#include <ArduinoJson.h>  // LiB pour l'utilisation du format JSON
+
+/*======================*/
+//  Dépendance interne  //
+/*======================*/
 #include "Simulation.h"
 #include "Ampoules.h"
 #include "config.h"
 #include "gyro.h"
 #include "in_servo.h"
 #include "out_servo.h"
-#include <queue>
-#include <ESP32Servo.h>  // Bibliothèque spécifique à l'ESP32
-
-bool blink = false;                       // Variable globale pour gérer la synchronisation
-unsigned long lastBlinkChange = 0;        // Chronomètre pour l'état de blink
-const unsigned long blinkInterval = 500;  // Intervalle de changement (ms)
+#include "WiFiWebSocket.h"
 
 bool hasBraked = false;        // Indique si un freinage a été effectué (Traxxas seulement)
 bool possibleReverse = false;  // Indique si la marche arrière est possible après un freinage
+bool blink = false;            // Variable globale pour gérer la synchronisation
+bool blink_degraded = false;            // Variable globale pour gérer la synchronisation
+bool tilted = false;           // si la voiture est en trop penchée
+bool use_wifi = true;          // si le wifi est utilisé
+int transmit_mod = 1;          // mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
 
+unsigned long previousMillis = 0;      // Gestion du temps pour le `loop`
+unsigned long previousMillis_5s = 0;   // Gestion du temps pour le `loop`
+unsigned long lastBlinkChange = 0;     // Chronomètre pour l'état de blink
+unsigned long lastReconnectCheck = 0;  // Dernière vérification de la connexion Wi-Fi
 
-//mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
-int transmit_mod = 1;
-
-
-// Initialisation des clignotants
-Ampoule clignotantGauche(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE, "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);
-Ampoule clignotantDroit(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);
-
-// Initialisation de l'angel eyes
-Ampoule angelEyes(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES, "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);
-
-// Initialisation du troisième feu stop
-Ampoule third_brake(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE,
-                    "Troisième Feu Stop", "PWM", VITESSE_THIRD_BRAKE);
-
-// Initialisation du feu stop
-Ampoule brakes(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES,
-               "Feu Stop", "PWM", VITESSE_BRAKES);
-
-// Initialisation des feux avant
-Ampoule HEADLIGHTS(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS,
-                   "Feux Avant", "PWM", VITESSE_HEADLIGHTS);
-
-// Initialisation du buzzer
-Ampoule BUZZER_WARNING(PIN_BUZZER, ETAT_BAS_BUZZER, ETAT_HAUT_BUZZER, "Buzzer", "BUZ", 0, VITESSE_BUZZER);
-
-// Initialisation du feu de recul
-Ampoule BACKWARD(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "PWM", 0, VITESSE_BACKWARD);
-
-
-
-
-// Objet WiFiWebSocket avec les constantes définies dans config.h
-WiFiWebSocket wifiWebSocket(WIFI_SSID, WIFI_PASSWORD);
-
-bool tilted = false;  //si la voiture est en trop penchée
-
-unsigned long previousMillis = 0;  // Gestion du temps pour le `loop`
-const unsigned long interval = 250;
-
-unsigned long previousMillis_5s = 0;  // Gestion du temps pour le `loop`
-const unsigned long interval_5s = 2500;
-
-int angle = 0;       // Angle actuel des servos
-int increment = 45;  // Incrément d'angle (1 pour avancer, -1 pour reculer)
-
-// Déclaration des servos
+/*=====================================*/
+/*  Déclaration des servos (sorties)   */
+/*=====================================*/
 CustomServo* servo1;
 CustomServo* servo2;
 CustomServo* servo3;
 
+/*=============================*/
+/*  Déclaration des ampoules   */
+/*=============================*/
+Ampoule clignotantGauche;
+Ampoule clignotantDroit;
+Ampoule angelEyes;
+Ampoule third_brake;
+Ampoule brakes;
+Ampoule HEADLIGHTS;
+Ampoule BUZZER_WARNING;
+Ampoule BACKWARD;
+
+/*=============================*/
+/*     Déclaration u wifi      */
+/*=============================*/
+WiFiWebSocket wifiWebSocket(WIFI_SSID, WIFI_PASSWORD);  // Objet WiFiWebSocket avec les constantes définies dans config.h
+
 void setup() {
-  delay(2500);
-  // Initialisation des communications
+  /*=============================*/
+  /*  Intialisation du port com  */
+  /*=============================*/
   Serial.begin(115200);
   Serial.println("demarrage");
 
-  //initialisation des servos (sorties)
+  /*=============================*/
+  /*    Intialisation du wifi    */
+  /*=============================*/
+  if (use_wifi) {
+    wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
+  }
+
+  /*=============================*/
+  /* Intialisation des ampoules  */
+  /*=============================*/
+  clignotantGauche.init(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE, "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);  // Initialisation du clignotant gauche
+  clignotantDroit.init(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);        // Initialisation du clignotants droit
+  angelEyes.init(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES, "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);                                               // Initialisation de l'angel eyes
+  third_brake.init(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE, "Troisième Feu Stop", "PWM", VITESSE_THIRD_BRAKE);                                 // Initialisation du troisième feu stop
+  brakes.init(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES, "Feu Stop", "PWM", VITESSE_BRAKES);                                                                    // Initialisation du feu stop
+  HEADLIGHTS.init(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS, "Feux Avant", "PWM", VITESSE_HEADLIGHTS);                                              // Initialisation des feux avant
+  BUZZER_WARNING.init(PIN_BUZZER, ETAT_BAS_BUZZER, ETAT_HAUT_BUZZER, "Buzzer", "BUZ", 0, VITESSE_BUZZER);                                                           // Initialisation du buzzer
+  BACKWARD.init(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "PWM", 0, VITESSE_BACKWARD);                                                   // Initialisation du feu de recul
+
+  /*=====================================*/
+  /* Intialisation des servos (sorties)  */
+  /*=====================================*/
   servo1 = new CustomServo(aux_serv_1, 500, 2400, 0);  // Pin 14, position initiale 0
   servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);  // Pin 15, position initiale 0
   servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);  // Pin 16, position initiale 0
 
-  wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
-  setupGyro();            // Initialisation du gyroscope
 
+  setupGyro();  // Initialisation du gyroscope
+
+  /*=====================================*/
+  /* Intialisation des pins (sorties)  */
+  /*=====================================*/
   pinMode(channel_1, INPUT);
   pinMode(channel_2, INPUT);
   pinMode(channel_3, INPUT);
@@ -90,57 +100,87 @@ void setup() {
   pinMode(channel_6, INPUT);
   pinMode(S_9_PWM, OUTPUT);
 
-  if (hp_sound) {
-    servo1->jumpTo(180);
-    delay(250);
-    servo1->jumpTo(180);
-    delay(100);
-    servo1->jumpTo(180);
-    delay(250);
-    servo1->jumpTo(180);
-    delay(100);
-    servo1->jumpTo(180);
-    delay(250);
-    servo1->jumpTo(180);
-  }
-
-
-
-
   /*=====================*/
   /*test des sortie pwm  */
   /*=====================*/
-  const int S_PWM[] = {
-    S_1_PWM,
-    S_2_PWM,
-    S_3_PWM,
-    S_4_PWM,
-    S_5_PWM,
-    S_6_PWM,
-    S_7_PWM,
-    S_8_PWM,
-  };                                                       // Tableau des pins PWM
+  const int S_PWM[] = {S_1_PWM,S_2_PWM,S_3_PWM,S_4_PWM,S_5_PWM,S_6_PWM,S_7_PWM,S_8_PWM};                                                       // Tableau des pins PWM
   const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);  // Nombre total de pins PWM
   for (int i = 0; i < PWM_COUNT; i++) {
     analogWrite(S_PWM[i], 255);  // Allumer la PWM au maximum
-    delay(500);                  // Pause de 500 ms
+    delay(250);                  // Pause de 500 ms
     analogWrite(S_PWM[i], 0);    // Éteindre la PWM
-    delay(500);                  // Pause de 500 ms
+    delay(100);                  // Pause de 500 ms
   }
   digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
   delay(250);
   digitalWrite(S_9_PWM, LOW);
 }
 
-unsigned long lastReconnectCheck = 0;          // Dernière vérification de la connexion Wi-Fi
-const unsigned long reconnectInterval = 5000;  // Intervalle de 5 secondes pour tenter une reconnexion
+void handleInputs() {
+   updateChannels();   //Lecture de cannaux partagé avec le recepteur
+    monitorThrottle();  // Gestion de l'activité sur throttle
+    readGyro();         // Lecture des données du gyro
+}
 
 void loop() {
-  unsigned long currentMillis = millis();
-  // Mise à jour de la variable blink toutes les 500 ms
-  if (currentMillis - lastBlinkChange >= blinkInterval) {
-    lastBlinkChange = currentMillis;
-    blink = !blink;  // Alterner entre true et false
+  unsigned long currentMillis = millis();     // Récupération du temps passé depuis le démarrage (chrono)
+  static unsigned long last_50_Loop = 0;      // il y a combien de temps que l'on a mesuré les 50ms
+  static unsigned long last_250_Loop = 0;     // il y a combien de temps que l'on a mesuré les 250ms
+  static unsigned long last_500_Loop = 0;     // il y a combien de temps que l'on a mesuré les 500ms
+  static unsigned long last_1000_Loop = 0;    // il y a combien de temps que l'on a mesuré les 1s
+  static unsigned long last_10000_Loop = 0;    // il y a combien de temps que l'on a mesuré les 10s
+
+  /*======================*/
+  //  Toutes les 50 ms    //
+  /*======================*/
+  if (currentMillis - last_50_Loop >= Interval_50) {
+    last_50_Loop = currentMillis;   // On mets à jours le dernier passage des 50ms
+    
+    handleInputs(); // On interroge les inputs
+
+    // Si le wifi est activé
+    if (use_wifi) {
+      wifiWebSocket.handle();
+    
+      if (!messageQueue.empty()) {
+        Serial.println("message dans la queue");
+        handleMessage();
+      }
+    }
+  }
+
+  /*======================*/
+  //  Toutes les 250 ms   //
+  /*======================*/
+  if (currentMillis - last_250_Loop >= Interval_250) {
+    last_250_Loop = currentMillis;
+    blink_degraded = !blink_degraded;  // Alterner entre true et false pour les clignotans en fonctionnement normal
+  }
+
+  /*======================*/
+  //  Toutes les 500 ms   //
+  /*======================*/
+  if (currentMillis - last_500_Loop >= Interval_500) {
+    last_500_Loop = currentMillis;
+    blink = !blink;  // Alterner entre true et false pour les clignotans en fonctionnement normal
+  }
+
+  /*======================*/
+  //    Toutes les 1 s    //
+  /*======================*/
+  if (currentMillis - last_1000_Loop >= Interval_1000) {
+    last_1000_Loop = currentMillis;
+    
+  }
+
+  /*======================*/
+  //    Toutes les 10 s   //
+  /*======================*/
+  if (currentMillis - last_10000_Loop >= Interval_10000) {
+    last_10000_Loop = currentMillis;
+    Serial.print("Mode actuel : ");
+    Serial.println(vehiculeModeToString(vehicule_mode));
+    
   }
 
   third_brake.update(false);
@@ -149,32 +189,15 @@ void loop() {
   clignotantGauche.update(blink);
   clignotantDroit.update(blink);
   BACKWARD.update(false);
+  angelEyes.update(false);
   delay(20);
 
 
   // Boucle lente
   static unsigned long lastSlowLoop = 0;
-  const unsigned long slowInterval = 10000;  // 10 secondes
+
   if (currentMillis - lastSlowLoop >= slowInterval) {
     lastSlowLoop = currentMillis;
-
-    switch (vehicle_mode) {
-      case NORMAL:
-        // Scénario normal
-        Serial.println("Normal");
-        break;
-
-      case WAIT:
-        // Scénario pour WAIT (inclure des délais si nécessaire)
-        Serial.println("WAIT");
-        break;
-
-      case FORGET:
-        // Scénario pour FORGET (inclut WAIT + bip sonore)
-        Serial.println("FORGET");
-        break;
-    }
-
 
     if (transmit_mod == 1) {
 
@@ -202,12 +225,9 @@ void loop() {
 
   // Boucle moyenne
   static unsigned long lastMediumLoop = 0;
-  const unsigned long mediumInterval = 250;  // 250 ms
+
   if (currentMillis - lastMediumLoop >= mediumInterval) {
     lastMediumLoop = currentMillis;
-    updateChannels();
-    monitorThrottle();
-    readGyro();
     if (transmit_mod == 2) {
       String data_to_send = generateGyroJson();
       wifiWebSocket.sendData(data_to_send);
@@ -216,7 +236,7 @@ void loop() {
       String jsonData = generateServoJson();
       wifiWebSocket.sendData(jsonData);
     }
-    if (vehicle_mode == NORMAL) {
+    if (vehicule_mode == NORMAL) {
       /*=======================================*/
       /*          surveillance gyro            */
       /* si le 4x4 atteint un angle trop élevé */
@@ -418,7 +438,7 @@ void loop() {
           }
           break;
       }
-    } else if (vehicle_mode == WAIT) {
+    } else if (vehicule_mode == WAIT) {
       clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
       clignotantDroit.setEtatBas(0);
       clignotantGauche.run();
@@ -427,22 +447,7 @@ void loop() {
   }
 
 
-  // Boucle rapide
-  static unsigned long lastFastLoop = 0;
-  const unsigned long fastInterval = 50;  // 50 ms
-  if (currentMillis - lastFastLoop >= fastInterval) {
-
-
-    lastFastLoop = currentMillis;
-
-
-    wifiWebSocket.handle();
-
-    if (!messageQueue.empty()) {
-      Serial.println("message dans la queue");
-      handleMessage();
-    }
-  }
+  
 }
 
 
