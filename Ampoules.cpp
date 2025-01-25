@@ -123,7 +123,7 @@ void Ampoule::update(bool blinkState) {
     if (etat != blinkState) {  // Vérifiez si l'état doit changer
         etat = blinkState;
         digitalWrite(pin, etat ? HIGH : LOW);
-        Serial.println("BUZ Update : " + etat);
+        Serial.println("BUZ Update : " + String(etat ? "ON" : "OFF"));
       }
   } else if (methode == "PWM") {
     if (tempsTransition <= 0) {

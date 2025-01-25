@@ -166,22 +166,18 @@ extern VehiculeMode vehicule_mode;
 extern VehiculeMode last_vehicule_mode;
 
 
-/*=====================================*/
-//    différent timer ne pas toucher   //
-/*=====================================*/
+/*=======================================*/
+//    différent timer (ne pas toucher)   //
+/*=======================================*/
 //le programme a des taches qui s'execute à différente cadence (boucle lente/rapide/moyenne)
-const unsigned long Interval_50= 50;
-const unsigned long Interval_250= 250;
-const unsigned long Interval_500= 500;
-const unsigned long Interval_1000= 1000;
-const unsigned long Interval_10000= 10000;
+const unsigned long Interval_50= 50;          //50 ms
+const unsigned long Interval_250= 250;        //250 ms
+const unsigned long Interval_500= 500;        //500 ms
+const unsigned long Interval_1000= 1000;      // 1 s
+const unsigned long Interval_5000= 1000;      // 5 s
+const unsigned long Interval_10000= 10000;    //10 s
 
-const unsigned long interval = 250;
-const unsigned long interval_5s = 5000;
 const unsigned long reconnectInterval = 5000;  // Intervalle de 5 secondes pour tenter une reconnexion
-const unsigned long slowInterval = 10000;  // 10 secondes
-const unsigned long mediumInterval = 250;  // 250 ms
-const unsigned long fastInterval = 50;  // 50 ms
 
 
 #endif
