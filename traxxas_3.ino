@@ -45,9 +45,10 @@ Ampoule clignotantDroit;
 Ampoule angelEyes;
 Ampoule third_brake;
 Ampoule brakes;
-Ampoule HEADLIGHTS;
+Ampoule headlights;
 Ampoule BUZZER_WARNING;
-Ampoule BACKWARD;
+Ampoule backward;
+Ampoule b_led;
 
 /*=============================*/
 /*     Déclaration u wifi      */
@@ -74,11 +75,12 @@ void setup() {
   clignotantGauche.init(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE, "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);  // Initialisation du clignotant gauche
   clignotantDroit.init(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);        // Initialisation du clignotants droit
   angelEyes.init(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES, "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);                                               // Initialisation de l'angel eyes
-  third_brake.init(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE, "Troisième Feu Stop", "PWM", VITESSE_THIRD_BRAKE);                                 // Initialisation du troisième feu stop
+  third_brake.init(PIN_THIRD_BRAKE, ETAT_BAS_THIRD_BRAKE, ETAT_HAUT_THIRD_BRAKE, "Troisième Feu Stop", "TOR", VITESSE_THIRD_BRAKE);                                 // Initialisation du troisième feu stop
   brakes.init(PIN_BRAKES, ETAT_BAS_BRAKES, ETAT_HAUT_BRAKES, "Feu Stop", "PWM", VITESSE_BRAKES);                                                                    // Initialisation des feux stop
-  HEADLIGHTS.init(PIN_HEADLIGHTS, ETAT_BAS_HEADLIGHTS, ETAT_HAUT_HEADLIGHTS, "Feux Avant", "PWM", VITESSE_HEADLIGHTS);                                              // Initialisation des feux avant
+  headlights.init(PIN_headlights, ETAT_BAS_headlights, ETAT_HAUT_headlights, "Feux Avant", "PWM", VITESSE_headlights);                                              // Initialisation des feux avant
   BUZZER_WARNING.init(PIN_BUZZER, ETAT_BAS_BUZZER, ETAT_HAUT_BUZZER, "Buzzer", "BUZ", 0, VITESSE_BUZZER);                                                           // Initialisation du buzzer
-  BACKWARD.init(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "PWM", 0, VITESSE_BACKWARD);                                                   // Initialisation du feu de recul
+  backward.init(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "TOR", 0, VITESSE_BACKWARD);                                                   // Initialisation du feu de recul
+  b_led.init(PIN_BAL, ETAT_BAS_BAL, ETAT_HAUT_BAL, "Feu de Recul", "TOR", 0, VITESSE_BAL);                                                                          // Initialisation du feu de recul
 
   /*=====================================*/
   /* Intialisation des servos (sorties)  */
@@ -142,13 +144,14 @@ void loop() {
     tilted = (abs(roll) > abs(limit_g_x) || abs(pitch) > abs(limit_g_y));
 
     /*=====    Mise à jours des sorties    =======*/
-    HEADLIGHTS.update(false);
+    headlights.update(false);
     brakes.update(false);
     third_brake.update(false);
-    
+
     clignotantGauche.update(blink);
     clignotantDroit.update(blink);
-    BACKWARD.update(false);
+    backward.update(false);
+    b_led.update(false);
     angelEyes.update(false);
 
     /*=====   transmition vers le smartphone si le wifi est activé   =======*/
@@ -263,7 +266,7 @@ void scenarioNormal() {
       delay(100);
     }
   } else {
-    if (!hp_sound) {
+    if (!hp_sound && !possibleReverse) {
       BUZZER_WARNING.stop();
     } else {
       servo1->jumpTo(0);
@@ -281,15 +284,15 @@ void scenarioNormal() {
       brakes.setEtatBas(0);
       clignotantGauche.setEtatBas(0);
       clignotantDroit.setEtatBas(0);
-      HEADLIGHTS.setEtatBas(0);
-      HEADLIGHTS.stop();
+      headlights.setEtatBas(0);
+      headlights.stop();
 
       break;
 
     case 1:  // Mode 1 : Veilleuses
       angelEyes.run();
-      brakes.setEtatBas(128);     // 50% pour feu stop
-      HEADLIGHTS.setEtatBas(25);  // 30% pour les phares
+      brakes.setEtatBas(25);     // 50% pour feu stop
+      headlights.setEtatBas(25);  // 30% pour les phares
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
       } else {
@@ -304,8 +307,8 @@ void scenarioNormal() {
 
     case 2:  // Mode 2 : Phares
       angelEyes.run();
-      brakes.setEtatBas(128);  // 50% pour feu stop
-      HEADLIGHTS.setEtatBas(80);
+      brakes.setEtatBas(25);  // 50% pour feu stop
+      headlights.setEtatBas(80);
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
 
@@ -321,8 +324,8 @@ void scenarioNormal() {
 
     case 3:  // Mode 3 : Plein phares
       angelEyes.run();
-      brakes.setEtatBas(128);  // 50% pour feu stop
-      HEADLIGHTS.run();        // 100% pour les phares
+      brakes.setEtatBas(25);  // 50% pour feu stop
+      headlights.run();        // 100% pour les phares
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
       } else {
@@ -364,39 +367,45 @@ void scenarioNormal() {
   }
 
   /*=====   surveillance frein et accélérrateur   =======*/
+  if (throttle_data > 50 && (light_mod_mode==2 || light_mod_mode==3)){
+    b_led.run();
+  }
+  else{
+    b_led.stop();
+  }
   if (!traxxas) {
-    // Mode Axial
+    /*=====   Mode Axial =======*/
     if (throttle_data > DEAD_ZONE) {
       third_brake.stop();
       brakes.stop();
-      BACKWARD.stop();  // Pas de marche arrière
-      if (debug_output) {Serial.println("Axial : Avancer");}
+      backward.stop();  // Pas de marche arrière
+      if (debug_output) { Serial.println("Axial : Avancer"); }
       if (!tilted) { BUZZER_WARNING.stop(); }
     } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
       third_brake.run();
       brakes.run();
-      BACKWARD.stop();
-      if (debug_output) {Serial.println("Axial : Frein");}
+      backward.stop();
+      if (debug_output) { Serial.println("Axial : Frein"); }
       if (!tilted) { BUZZER_WARNING.stop(); }
     } else {
       third_brake.stop();
       brakes.stop();
-      BACKWARD.run();  // Marche arrière directe
+      backward.run();  // Marche arrière directe
       BUZZER_WARNING.run();
-      if (debug_output) {Serial.println("Axial : Reculer");}
+      if (debug_output) { Serial.println("Axial : Reculer"); }
     }
   } else {
 
-    // Mode Traxxas
+    /*=====   Mode Traxxas =======*/
     if (throttle_data > DEAD_ZONE) {
       // Avancer, réinitialiser tous les états
       hasBraked = false;
       possibleReverse = false;
       third_brake.stop();
       brakes.stop();
-      BACKWARD.stop();
+      backward.stop();
       if (!tilted) { BUZZER_WARNING.stop(); }
-      if (debug_output) {Serial.println("Traxxas : Avancer");}
+      if (debug_output) { Serial.println("Traxxas : Avancer"); }
     } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
       // Décélération (pas de frein)
       if (hasBraked) {
@@ -406,50 +415,60 @@ void scenarioNormal() {
       }
       third_brake.stop();
       brakes.stop();
-      BACKWARD.stop();
-      if (!tilted && !possibleReverse) { BUZZER_WARNING.stop();
-       }
-      if (debug_output) {Serial.println("Traxxas : Décélérer");}
+      backward.stop();
+      if (!tilted) {
+          BUZZER_WARNING.stop();
+      }
+
+      
+      if (debug_output) { Serial.println("Traxxas : Décélérer"); }
     } else if (throttle_data < -DEAD_ZONE) {
       if (!hasBraked && !possibleReverse) {
         // Première impulsion : Frein
         hasBraked = true;
         third_brake.run();
         brakes.run();
-        BACKWARD.stop();
-        if (!tilted) {
-          BUZZER_WARNING.stop(); 
-          }
+        //backward.stop();
+        
 
-        if (debug_output) {Serial.println("Traxxas : Freiner");}
+        if (debug_output) { Serial.println("Traxxas : Freiner"); }
       } else if (possibleReverse) {
         // Seconde impulsion : Marche arrière
         third_brake.stop();
         brakes.stop();
-        BACKWARD.run();
+        backward.run();
         BUZZER_WARNING.run();
-        if (debug_output) {Serial.println("Traxxas : Reculer");}
+        if (debug_output) { Serial.println("Traxxas : Reculer"); }
       }
     }
+  }
+  Serial.print("test : ");
+  Serial.print( String(tilted ? "  ON  " : "  OFF  "));
+  Serial.println( String(possibleReverse ? "  ON  " : "  OFF  "));
+  if (!tilted && !possibleReverse) {
+    //BUZZER_WARNING.stop();
   }
 }
 
 void scenarioWait() {
   BUZZER_WARNING.update(blink_degraded);
-  
+
   clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
   clignotantDroit.setEtatBas(0);
   clignotantGauche.run();
   clignotantDroit.run();
+  third_brake.run();
+  brakes.run();
   if (!tilted) { BUZZER_WARNING.stop(); }
 }
 
 void scenarioForget() {
   BUZZER_WARNING.update(blink_degraded);
+  backward.stop();
 
-  
+
   // Implémentation pour le mode FORGET
-  if (!tilted) { BUZZER_WARNING.stop(); }
+  //if (!tilted) { BUZZER_WARNING.stop(); }
 }
 
 void handleMessage() {
@@ -509,8 +528,8 @@ void handleMessage() {
         third_brake.forceOutput(value);
       } else if (output == "brakes") {
         brakes.forceOutput(value);
-      } else if (output == "HEADLIGHTS") {
-        HEADLIGHTS.forceOutput(value);
+      } else if (output == "headlights") {
+        headlights.forceOutput(value);
       } else {
         Serial.println("Sortie inconnue : " + output);
       }
