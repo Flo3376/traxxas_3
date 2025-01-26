@@ -22,7 +22,7 @@ int light_mod_mode = 0; // Définition de la variable
 
 
 // Variables globales pour surveiller le throttle
-int last_significant_throttle = 0;
+int last_significant_throttle = 0;  //!! à remettre à zero en production
 unsigned long last_activity_time = millis();
 VehiculeMode vehicule_mode = WAIT; // Définition de la variable globale
 VehiculeMode last_vehicule_mode = WAIT; // Initialisé à NORMAL par défaut
@@ -41,7 +41,15 @@ void monitorThrottle() {
     unsigned long inactivity_duration = current_time - last_activity_time;
 
     // Mettre à jour le statut en fonction de l'inactivité
-    if (inactivity_duration > FORGET_TIMEOUT) {
+    if (inactivity_duration > EXPO_TIMEOUT) {
+      if(last_vehicule_mode!=EXPO)
+       {
+        vehicule_mode = EXPO;
+        Serial.println("Passage en mod EXPO");
+       }
+        
+    }
+    else if (inactivity_duration > FORGET_TIMEOUT) {
        if(last_vehicule_mode!=FORGET)
        {
         vehicule_mode = FORGET;
@@ -55,7 +63,8 @@ void monitorThrottle() {
         Serial.println("Passage en mod WAIT");
        }
         
-    } else {
+    }
+    else {
       if(last_vehicule_mode!=NORMAL)
        {
         vehicule_mode = NORMAL;
@@ -164,6 +173,8 @@ const char* vehiculeModeToString(VehiculeMode mode) {
             return "WAIT";
         case FORGET:
             return "FORGET";
+        case EXPO:
+            return "EXPO";
         default:
             return "UNKNOWN";
     }

@@ -136,6 +136,7 @@ void Ampoule::update(bool blinkState) {
       analogWrite(pin, etatBas);
     }
   } 
+  else if (methode == "TOR"){}
   else{Serial.println(nom + " mod inconnu " + methode);}
 }
 

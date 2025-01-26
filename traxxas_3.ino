@@ -8,27 +8,26 @@
 /*======================*/
 //  Dépendance interne  //
 /*======================*/
-#include "Simulation.h"
-#include "Ampoules.h"
-#include "config.h"
-#include "gyro.h"
-#include "in_servo.h"
-#include "out_servo.h"
-#include "WiFiWebSocket.h"
+#include "Ampoules.h"       // Contrôle des ampoules (phares, clignotants, etc.)
+#include "config.h"         // Fichier de configuration pour définir les paramètres globaux du projet
+#include "gyro.h"           // Gestion du gyroscope, pour détecter l'inclinaison ou la stabilité
+#include "in_servo.h"       // Gestion des servos utilisés comme entrées (par exemple, récupération des commandes utilisateur)
+#include "out_servo.h"      // Gestion des servos utilisés comme sorties (par exemple, contrôle des moteurs ou des roues)
+#include "WiFiWebSocket.h"  // Gestion de la communication via WebSocket pour le Wi-Fi
 
-
-bool hasBraked = false;        // Indique si un freinage a été effectué (Traxxas seulement)
-bool possibleReverse = false;  // Indique si la marche arrière est possible après un freinage
-bool blink = false;            // Variable globale pour gérer la synchronisation
-bool blink_degraded = false;   // Variable globale pour gérer la synchronisation
-bool tilted = false;           // si la voiture est en trop penchée
-bool use_wifi = false;         // activation ou non du wifi dés de démarrage de l'esp
-int transmit_mod = 1;          // mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
-
-unsigned long previousMillis = 0;      // Gestion du temps pour le `loop`
-unsigned long previousMillis_5s = 0;   // Gestion du temps pour le `loop`
-unsigned long lastBlinkChange = 0;     // Chronomètre pour l'état de blink
-unsigned long lastReconnectCheck = 0;  // Dernière vérification de la connexion Wi-Fi
+/*======================*/
+//      Variables       //
+/*======================*/
+bool hasBraked = false;        	// Indique si un freinage a été effectué (Traxxas seulement)
+bool possibleReverse = false;  	// Indique si la marche arrière est possible après un freinage (Traxxas seulement)
+bool blink = false;            	// Variable globale pour gérer la synchronisation
+bool blink_hs = false;   		// Variable globale pour gérer la synchronisation
+bool blink_degraded = false;   	// Variable globale pour gérer la synchronisation
+bool tilted = false;          	// si la voiture est en trop penchée
+bool use_wifi = false;        	// activation ou non du wifi dés de démarrage de l'esp
+int transmit_mod = 1;          	// mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
+bool initialized_expo = false;		// Assure que les bips de démarrage ne se jouent qu'une seule fois dans le mod EXPO
+int step_expo = 0;                   // Étape actuelle dans le scénario EXPO
 
 /*=====================================*/
 /*  Déclaration des servos (sorties)   */
@@ -53,7 +52,8 @@ Ampoule b_led;
 /*=============================*/
 /*     Déclaration u wifi      */
 /*=============================*/
-WiFiWebSocket wifiWebSocket(WIFI_SSID, WIFI_PASSWORD);  // Objet WiFiWebSocket avec les constantes définies dans config.h
+/*=====   Objet WiFiWebSocket avec les constantes définies dans config.h   =======*/
+WiFiWebSocket wifiWebSocket(WIFI_SSID, WIFI_PASSWORD);
 
 void setup() {
   /*=============================*/
@@ -66,12 +66,25 @@ void setup() {
   /*    Intialisation du wifi    */
   /*=============================*/
   if (use_wifi) {
-    wifiWebSocket.start();  // Démarre Wi-Fi et WebSocket
+    wifiWebSocket.start();
   }
 
   /*=============================*/
   /* Intialisation des ampoules  */
   /*=============================*/
+  /*
+	   Ces fonctions initialisent des ampoules avec les paramètres suivants :
+	  - pin : Numéro de la broche où l'ampoule est connectée. Les valeurs sont définies dans le fichier config.h.
+	  - etat_bas : Puissance lumineuse au repos (0 = éteint). Cette valeur peut être modifiée dynamiquement.
+	  - etat_haut : Puissance lumineuse lorsque l'ampoule est activée. Cette valeur peut également être modifiée dynamiquement.
+	  - nom : Nom descriptif de l'ampoule (ex. "Feu de Recul"), utilisé pour les diagnostics avancés.
+	  - type : Type de fonctionnement de la sortie :
+	           - "TOR" : Tout ou rien (marche/arrêt uniquement).
+	           - "PWM" : Variation progressive (non testé).
+	           - "CLI" : Clignotement régulier.
+	  - transition : Temps de transition (en millisecondes) entre deux états (utilisé uniquement pour PWM).
+	  - vitesse : Vitesse de clignotement (utilisé uniquement si le type est "CLI").
+	*/
   clignotantGauche.init(PIN_CLIGNOTANT_GAUCHE, ETAT_BAS_CLIGNOTANT_GAUCHE, ETAT_HAUT_CLIGNOTANT_GAUCHE, "Clignotant Gauche", "CLI", 0, VITESSE_CLIGNOTANT_GAUCHE);  // Initialisation du clignotant gauche
   clignotantDroit.init(PIN_CLIGNOTANT_DROIT, ETAT_BAS_CLIGNOTANT_DROIT, ETAT_HAUT_CLIGNOTANT_DROIT, "Clignotant Droit", "CLI", 0, VITESSE_CLIGNOTANT_DROIT);        // Initialisation du clignotants droit
   angelEyes.init(PIN_ANGEL_EYES, ETAT_BAS_ANGEL_EYES, ETAT_HAUT_ANGEL_EYES, "Angel Eyes", "PWM", VITESSE_ANGEL_EYES);                                               // Initialisation de l'angel eyes
@@ -85,9 +98,21 @@ void setup() {
   /*=====================================*/
   /* Intialisation des servos (sorties)  */
   /*=====================================*/
-  servo1 = new CustomServo(aux_serv_1, 500, 2400, 0);  // Pin 14, position initiale 0
-  servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);  // Pin 15, position initiale 0
-  servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);  // Pin 16, position initiale 0
+  /*
+	  Cette section configure les servos connectés aux broches spécifiées.
+	  Les servos sont réglés pour fonctionner sur une plage de fréquences comprise entre 500 et 2400 µs,
+	  ce qui correspond à un signal PWM standard élargi. Chaque servo est initialisé avec une position
+	  centrale (0 degré) par défaut.
+
+	  Paramètres de l'initialisation :
+	  - aux_serv_X : Broche à laquelle le servo est connecté (définie dans config.h).
+	  - 500 : Durée d'impulsion minimale (en microsecondes), correspond au mouvement minimum du servo.
+	  - 2400 : Durée d'impulsion maximale (en microsecondes), correspond au mouvement maximum du servo.
+	  - 0 : Position initiale (centrale) du servo.
+  */
+  servo1 = new CustomServo(aux_serv_1, 500, 2400, 0);
+  servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);
+  servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);
 
 
   setupGyro();  // Initialisation du gyroscope
@@ -104,10 +129,11 @@ void setup() {
   pinMode(S_9_PWM, OUTPUT);
 
   /*=====================*/
-  /*test des sortie pwm  */
+  /*  test des sortie    */
   /*=====================*/
-  const int S_PWM[] = { S_1_PWM, S_2_PWM, S_3_PWM, S_4_PWM, S_5_PWM, S_6_PWM, S_7_PWM, S_8_PWM };  // Tableau des pins PWM
-  const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);                                          // Nombre total de pins PWM
+  const int S_PWM[] = { S_1_PWM, S_2_PWM, S_3_PWM, S_4_PWM, S_5_PWM, S_6_PWM, S_7_PWM, S_8_PWM };  // Tableau des pins sortie
+
+  const int PWM_COUNT = sizeof(S_PWM) / sizeof(S_PWM[0]);  // Nombre total de pins sortie
   for (int i = 0; i < PWM_COUNT; i++) {
     analogWrite(S_PWM[i], 255);  // Allumer la PWM au maximum
     delay(250);                  // Pause de 500 ms
@@ -127,12 +153,13 @@ void handleInputs() {
 
 void loop() {
   unsigned long currentMillis = millis();    // Récupération du temps passé depuis le démarrage (chrono)
-  static unsigned long last_50_Loop = 0;     // il y a combien de temps que l'on a mesuré les 50ms
-  static unsigned long last_250_Loop = 0;    // il y a combien de temps que l'on a mesuré les 250ms
-  static unsigned long last_500_Loop = 0;    // il y a combien de temps que l'on a mesuré les 500ms
-  static unsigned long last_1000_Loop = 0;   // il y a combien de temps que l'on a mesuré les 1s
-  static unsigned long last_5000_Loop = 0;   // il y a combien de temps que l'on a mesuré les 5
-  static unsigned long last_10000_Loop = 0;  // il y a combien de temps que l'on a mesuré les 10s
+  static unsigned long last_50_Loop = 0;     // La dernière fois l'on a mesuré les 50ms
+  static unsigned long last_125_Loop = 0;    // La dernière fois l'on a mesuré les 125ms
+  static unsigned long last_250_Loop = 0;    // La dernière fois l'on a mesuré les 250ms
+  static unsigned long last_500_Loop = 0;    // La dernière fois l'on a mesuré les 500ms
+  static unsigned long last_1000_Loop = 0;   // La dernière fois l'on a mesuré les 1s
+  static unsigned long last_5000_Loop = 0;   // La dernière fois l'on a mesuré les 5
+  static unsigned long last_10000_Loop = 0;  // La dernière fois l'on a mesuré les 10s
 
   /*=====   Toutes les 50 ms   =======*/
   if (currentMillis - last_50_Loop >= Interval_50) {
@@ -147,14 +174,11 @@ void loop() {
     headlights.update(false);
     brakes.update(false);
     third_brake.update(false);
-
-    clignotantGauche.update(blink);
-    clignotantDroit.update(blink);
     backward.update(false);
     b_led.update(false);
     angelEyes.update(false);
 
-    /*=====   transmition vers le smartphone si le wifi est activé   =======*/
+    /*=====   reception des message depuis le smartphone si le wifi est activé   =======*/
     if (use_wifi) {
       wifiWebSocket.handle();
 
@@ -165,34 +189,93 @@ void loop() {
     }
 
     /*=====   appelé les scénario en fonction du mod d'énergie   =======*/
+    /*
+	  Cette section gère les différents modes d'énergie du véhicule. 
+	  Le passage entre les modes est basé sur des durées d'inactivité ou des événements spécifiques.
+	  Une accélération ou une commande utilisateur fait immédiatement repasser le véhicule en mode NORMAL.
+
+	  Description des modes :
+	  - **NORMAL** :
+	    - Mode de fonctionnement complet.
+	    - Tous les composants sont actifs : servos, ampoules, Wi-Fi, etc.
+	    - Ce mode est utilisé lorsque le véhicule est en activité normale.
+
+	  - **WAIT** :
+	    - Simule une attente où le pilote aurait serré le frein à main et activé les warnings.
+	    - Utilisé après une période d'inactivité modérée.
+
+	  - **FORGET** :
+	    - Suppose que l'utilisateur a oublié son 4x4 sous tension.
+	    - Le véhicule émet des bips réguliers pour rappeler à l'utilisateur qu'il doit intervenir.
+	    - Peut inclure des alertes visuelles et sonores.
+
+	  - **EXPO** (non encore implémenté) :
+	    - Présente le 4x4 sur un présentoir d'exposition.
+	    - Active un clignotement attractif (phares, warning, etc.) tout en désactivant des fonctionnalités inutiles comme le Wi-Fi.
+
+	  Logique de transition entre les modes :
+	  - Le système passe automatiquement d'un mode à l'autre dans l'ordre suivant après une durée d'inactivité définie :
+	    NORMAL → WAIT → FORGET → EXPO.
+	  - Toute action utilisateur, comme une accélération, ramène immédiatement au mode NORMAL.
+	*/
     switch (vehicule_mode) {
       case NORMAL:
-        scenarioNormal();
+        scenarioNormal();  // Fonctionnement complet
         break;
       case WAIT:
-        scenarioWait();
+        scenarioWait();  // Simulation d'attente avec warnings et frein à main
         break;
       case FORGET:
-        scenarioForget();
+        scenarioForget();  // Rappel sonore à intervalle régulier et désactivation de certaines lumiére pour économiser la batterie
+        break;
+      case EXPO:
+        scenarioExpo();  // Non implémenté, mais destiné à l'exposition (Wi-Fi désactivé, clignotements attractifs)
         break;
     }
+  }
+
+  /*=====   Toutes les 125 ms   =======*/
+  if (currentMillis - last_125_Loop >= Interval_125) {
+    last_125_Loop = currentMillis;
+    blink_hs = !blink_hs;  // Alterner entre true et false pour les clignotans en fonctionnement normal
   }
 
   /*=====   Toutes les 250 ms   =======*/
   if (currentMillis - last_250_Loop >= Interval_250) {
     last_250_Loop = currentMillis;
 
-    blink_degraded = !blink_degraded;  // Alterner entre true et false pour les clignotans en fonctionnement dégradé
+    /*=====   Alterner entre true et false pour les clignotans en fonctionnement dégradé   =======*/
+    blink_degraded = !blink_degraded;
 
     /*=====   transmition vers le smartphone si le wifi est activé   =======*/
+    /*
+	 Modes de transmission (`transmit_mod`) :
+	  - **Mode 1 (géré ailleurs)** :
+	    - Ce mode s'exécute toutes les 5 secondes (géré dans une autre partie du code).
+	    - Transmet des informations peu importantes, comme un état général ou un message "keep-alive".
+	    
+	  - **Mode 2 : Gyroscope** :
+	    - Envoie régulièrement les données du gyroscope au smartphone.
+	    - Les données comprennent l'angle d'inclinaison, l'accélération ou d'autres paramètres liés à la stabilité.
+
+	  - **Mode 3 : Récepteur radio** :
+	    - Transmet les positions théoriques des commandes demandées par la télécommande.
+	    - Ces données reflètent l'état souhaité des actionneurs (ex. servos) tel que défini par l'utilisateur.
+
+	  - **Mode 4 ( partiellement implémenté ou non géré)** :
+	    - Ce mode est prévu pour forcer les sorties dans des états spécifiques, indépendamment des commandes normales.
+	    - Il surcharge le fonctionnement standard du véhicule pour imposer un contrôle manuel ou des tests.
+	*/
     if (use_wifi) {
       if (transmit_mod == 2) {
-        String data_to_send = generateGyroJson();
-        wifiWebSocket.sendData(data_to_send);
+        // Envoie les données du gyroscope au smartphone
+        String data_to_send = generateGyroJson();  // Génère les données JSON du gyroscope
+        wifiWebSocket.sendData(data_to_send);      // Envoie via WebSocket
       }
       if (transmit_mod == 4) {
-        String jsonData = generateServoJson();
-        wifiWebSocket.sendData(jsonData);
+        // Envoie les données des servos au smartphone
+        String jsonData = generateServoJson();  // Génère les données JSON des servos
+        wifiWebSocket.sendData(jsonData);       // Envoie via WebSocket
       }
     }
   }
@@ -216,15 +299,15 @@ void loop() {
     if (transmit_mod == 1 && use_wifi) {
 
       JsonDocument doc;
-      doc["type"] = "info";
-      doc["name"] = car_name;
-      doc["version"] = version_soft;
-      doc["localip"] = WiFi.localIP().toString();
-      doc["uptime"] = millis() / 1000;
-      doc["ssid"] = WIFI_SSID;
-      doc["rssi"] = WiFi.RSSI();
-      doc["output"] = output_u;
-      doc["input"] = input_u;
+      doc["type"] = "info";                        // Type de message (info général)
+      doc["name"] = car_name;                      // Nom du véhicule (défini dans config.h)
+      doc["version"] = version_soft;               // Version logicielle
+      doc["localip"] = WiFi.localIP().toString();  // Adresse IP locale
+      doc["uptime"] = millis() / 1000;             // Temps de fonctionnement en secondes
+      doc["ssid"] = WIFI_SSID;                     // Nom du réseau Wi-Fi
+      doc["rssi"] = WiFi.RSSI();                   // Puissance du signal Wi-Fi (dBm)
+      doc["output"] = output_u;                    // Nombre de sorties
+      doc["input"] = input_u;                      // Nombre de entrées
       String jsonString;
       serializeJson(doc, jsonString);
       wifiWebSocket.sendData(jsonString);
@@ -238,18 +321,35 @@ void loop() {
     Serial.print("Mode actuel : ");
     Serial.println(vehiculeModeToString(vehicule_mode));
   }
-
-
+  //*=====   bridageg du système pour ne pas faire tourner le processeur à fond pour rien   =======*/
   delay(20);
 }
 
 
 
-// Exemple d'implémentation pour un scénario
 void scenarioNormal() {
+  /*
+  Fonction : scenarioNormal()
+  ---------------------------
+  Cette fonction gère le comportement du véhicule en mode NORMAL, où toutes les fonctionnalités sont actives.
+  Elle surveille et contrôle plusieurs aspects du véhicule en temps réel, notamment :
+  - Gyroscope pour détecter un angle critique.
+  - Commandes d'éclairage selon le commodo (off, veilleuse, phares, plein phares).
+  - Clignotants selon la direction (gauche/droite).
+  - Gestion des freins et de l'accélérateur.
+  - Différenciation entre les modes Axial et Traxxas pour la gestion du frein et de la marche arrière.
+*/
   BUZZER_WARNING.update(blink);
+  clignotantGauche.update(blink);
+  clignotantDroit.update(blink);
+
+  /*=====   on remet le mod EXPO à 0    =======*/
+  initialized_expo=false;
+  step_expo=0;
 
   /*=====   surveillance gyro :  si le 4x4 atteint un angle trop élevé    =======*/
+
+  // Si l'angle est critique, activer les clignotants et émettre une alarme sonore/visuelle
   if (tilted) {
     if (debug_output) {
       Serial.println("tilted");
@@ -257,13 +357,9 @@ void scenarioNormal() {
     clignotantGauche.run();
     clignotantDroit.run();
     if (!hp_sound) {
-      BUZZER_WARNING.run();
-      //Serial.println("BUZZER");
+      BUZZER_WARNING.run();  // Active le buzzer d'alarme
     } else {
       servo1->jumpTo(180);
-      delay(250);
-      servo1->jumpTo(0);
-      delay(100);
     }
   } else {
     if (!hp_sound && !possibleReverse) {
@@ -291,8 +387,8 @@ void scenarioNormal() {
 
     case 1:  // Mode 1 : Veilleuses
       angelEyes.run();
-      brakes.setEtatBas(25);     // 50% pour feu stop
-      headlights.setEtatBas(25);  // 30% pour les phares
+      brakes.setEtatBas(25);      // Faible luminosité pour feu stop
+      headlights.setEtatBas(25);  // Faible luminosité pour les phares
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
       } else {
@@ -307,8 +403,8 @@ void scenarioNormal() {
 
     case 2:  // Mode 2 : Phares
       angelEyes.run();
-      brakes.setEtatBas(25);  // 50% pour feu stop
-      headlights.setEtatBas(80);
+      brakes.setEtatBas(25);      // Faible luminosité pour feu stop
+      headlights.setEtatBas(80);  // Luminosité moyenne pour les phares
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
 
@@ -324,8 +420,8 @@ void scenarioNormal() {
 
     case 3:  // Mode 3 : Plein phares
       angelEyes.run();
-      brakes.setEtatBas(25);  // 50% pour feu stop
-      headlights.run();        // 100% pour les phares
+      brakes.setEtatBas(25);  // Faible luminosité pour feu stop
+      headlights.run();       // Phares à pleine puissance
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
       } else {
@@ -340,8 +436,8 @@ void scenarioNormal() {
   }
 
   /*=====   surveillance cligno : tourne à gauche ou a droite    =======*/
-  //si on a pas d'alarme en dévers (prioritaire)
-  if (!tilted) {
+  // Active les clignotants en fonction des commandes de direction
+  if (!tilted) {  // Priorité au gyroscope
     if (steer_data > LVL_CLIGNOTANT_DROIT) {
       clignotantDroit.run();
       if (debug_output) {
@@ -367,27 +463,27 @@ void scenarioNormal() {
   }
 
   /*=====   surveillance frein et accélérrateur   =======*/
-  if (throttle_data > 50 && (light_mod_mode==2 || light_mod_mode==3)){
+  // Allume la barre de LED si l'accélérateur est actif à plus de 50%
+  if (throttle_data > 50 && (light_mod_mode == 2 || light_mod_mode == 3)) {
     b_led.run();
-  }
-  else{
+  } else {
     b_led.stop();
   }
   if (!traxxas) {
     /*=====   Mode Axial =======*/
-    if (throttle_data > DEAD_ZONE) {
-      third_brake.stop();
-      brakes.stop();
-      backward.stop();  // Pas de marche arrière
+    if (throttle_data > DEAD_ZONE) {  //si la position de l'accellérateur est au dessus de la zone morte (on avance)
+      third_brake.stop();             // Pas de frein
+      brakes.stop();                  // Pas de frein
+      backward.stop();                // Pas de marche arrière
       if (debug_output) { Serial.println("Axial : Avancer"); }
       if (!tilted) { BUZZER_WARNING.stop(); }
-    } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {
+    } else if (throttle_data >= -DEAD_ZONE && throttle_data <= DEAD_ZONE) {  //si la position de l'accellérateur est dans la zone morte (accellérateur relaché)
       third_brake.run();
       brakes.run();
       backward.stop();
       if (debug_output) { Serial.println("Axial : Frein"); }
       if (!tilted) { BUZZER_WARNING.stop(); }
-    } else {
+    } else {  //si la position de l'accellérateur est au dessous de la zone morte (on recule)
       third_brake.stop();
       brakes.stop();
       backward.run();  // Marche arrière directe
@@ -417,10 +513,10 @@ void scenarioNormal() {
       brakes.stop();
       backward.stop();
       if (!tilted) {
-          BUZZER_WARNING.stop();
+        BUZZER_WARNING.stop();
       }
 
-      
+
       if (debug_output) { Serial.println("Traxxas : Décélérer"); }
     } else if (throttle_data < -DEAD_ZONE) {
       if (!hasBraked && !possibleReverse) {
@@ -429,7 +525,7 @@ void scenarioNormal() {
         third_brake.run();
         brakes.run();
         //backward.stop();
-        
+
 
         if (debug_output) { Serial.println("Traxxas : Freiner"); }
       } else if (possibleReverse) {
@@ -442,16 +538,20 @@ void scenarioNormal() {
       }
     }
   }
-  Serial.print("test : ");
-  Serial.print( String(tilted ? "  ON  " : "  OFF  "));
-  Serial.println( String(possibleReverse ? "  ON  " : "  OFF  "));
-  if (!tilted && !possibleReverse) {
-    //BUZZER_WARNING.stop();
-  }
 }
 
+/*
+  Fonction : scenarioWait()
+  --------------------------
+  Ce scénario représente une phase d'attente où :
+  - Les warnings (clignotants) clignotent en mode dégradé.
+  - Les feux de position et freins sont activés.
+  - L'état des autres dispositifs laissés actifs par NORMAL est préservé.
+*/
 void scenarioWait() {
-  BUZZER_WARNING.update(blink_degraded);
+  clignotantGauche.update(blink);
+  clignotantDroit.update(blink);
+  //BUZZER_WARNING.update(blink_degraded);
 
   clignotantGauche.setEtatBas(0);  // Feu de position uniquement si américain
   clignotantDroit.setEtatBas(0);
@@ -461,15 +561,210 @@ void scenarioWait() {
   brakes.run();
   if (!tilted) { BUZZER_WARNING.stop(); }
 }
+/*
+  Fonction : scenarioForget()
+  ----------------------------
+  Ce scénario simule une alerte pour rappeler à l'utilisateur que le véhicule est sous tension.
+  - Le buzzer clignote en mode dégradé.
+  - La marche arrière est explicitement désactivée.
+  - Les dispositifs laissés actifs par WAIT (warnings, freins) restent allumés si non désactivés ici.
+*/
 
 void scenarioForget() {
-  BUZZER_WARNING.update(blink_degraded);
+  clignotantGauche.update(blink_hs);
+  clignotantDroit.update(blink_hs);
   backward.stop();
 
+  static unsigned long lastBipTime = 0;    // Moment du dernier bip
+  unsigned long currentMillis = millis();  // Temps actuel en millisecondes
 
-  // Implémentation pour le mode FORGET
-  //if (!tilted) { BUZZER_WARNING.stop(); }
+  // Vérifie si 30 secondes (30 000 ms) se sont écoulées depuis le dernier bip
+  if (currentMillis - lastBipTime >= 30000) {
+    digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
+    delay(250);
+    digitalWrite(S_9_PWM, LOW);
+    delay(50);
+    digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
+    delay(250);
+    digitalWrite(S_9_PWM, LOW);
+    lastBipTime = currentMillis;  // Met à jour le moment du dernier bip
+  }
 }
+
+void scenarioExpo() {
+
+  clignotantGauche.update(blink);
+  clignotantDroit.update(blink);
+
+  static unsigned long lastActionTime = 0;    // Temps de la dernière action
+  unsigned long currentMillis = millis();
+
+  // Étape 1 : Signaler l'entrée en EXPO par 3 bips courts
+  if (!initialized_expo) {
+    for (int i = 0; i < 3; i++) {
+      digitalWrite(S_9_PWM, HIGH);  // Active la sortie PWM
+      delay(125);
+      digitalWrite(S_9_PWM, LOW);
+      delay(125);
+    }
+    initialized_expo = true; // Les bips sont joués une seule fois
+    lastActionTime = currentMillis; // Synchronisation pour la séquence lumineuse
+
+    // Extinction complète avant de commencer
+    brakes.stop();
+    backward.stop();
+    b_led.stop();
+    clignotantGauche.stop();
+    clignotantDroit.stop();
+    angelEyes.stop();
+    headlights.stop();
+  }
+
+  // Étape 2 : Gestion des lumières (allumage progressif avec clignotements)
+  if (currentMillis - lastActionTime >= 500) { // Exécuter toutes les 500 ms
+    lastActionTime = currentMillis;
+
+    // Gestion des étapes avec un switch
+    switch (step_expo) {
+      // Allumage progressif
+      case 0:
+        Serial.println("Étape 0 : Allumage du clignotant gauche");
+        clignotantGauche.run();
+        break;
+
+      case 5:
+        Serial.println("Étape 5 : Fixation du clignotant gauche à intensité maximale");
+        clignotantGauche.stop();
+        clignotantGauche.setEtatBas(254);
+        break;
+
+      case 10:
+        Serial.println("Étape 10 : Allumage du clignotant droit");
+        clignotantDroit.run();
+        break;
+
+      case 15:
+        Serial.println("Étape 15 : Fixation du clignotant droit à intensité maximale");
+        clignotantDroit.stop();
+        clignotantDroit.setEtatBas(254);
+        break;
+
+      case 20:
+        Serial.println("Étape 20 : Allumage des Angel Eyes");
+        angelEyes.run();
+        break;
+
+      case 25:
+        Serial.println("Étape 25 : Allumage des Angel Eyes (fixé)");
+        angelEyes.run();
+        break;
+
+      case 30:
+        Serial.println("Étape 30 : Allumage des phares à faible intensité");
+        headlights.setEtatBas(25);
+        break;
+
+      case 35:
+        Serial.println("Étape 35 : Allumage des phares à intensité moyenne");
+        headlights.setEtatBas(80);
+        break;
+
+      case 40:
+        Serial.println("Étape 40 : Activation complète des phares");
+        headlights.run();
+        break;
+
+      case 45:
+        Serial.println("Étape 45 : Réduction de l’intensité des clignotants");
+        clignotantDroit.setEtatBas(25);
+        clignotantGauche.setEtatBas(25);
+        break;
+
+      case 50:
+        Serial.println("Étape 50 : Allumage du clignotant droit");
+        clignotantDroit.setEtatBas(0);
+        clignotantDroit.run();
+        break;
+
+      case 55:
+        Serial.println("Étape 55 : Allumage du clignotant gauche");
+        clignotantGauche.setEtatBas(0);
+        clignotantGauche.run();
+        break;
+
+      case 60:
+        Serial.println("Étape 60 : Activation des LED arrière");
+        b_led.run();
+        break;
+
+      case 65:
+        Serial.println("Étape 65 : Activation des freins");
+        brakes.run();
+        break;
+
+      case 70:
+        Serial.println("Étape 70 : Activation de la marche arrière");
+        backward.run();
+        break;
+
+      case 75:
+        Serial.println("Étape 75 : Activation du troisième feu stop");
+        third_brake.run();
+        break;
+
+      // Extinction progressive (ordre inverse)
+      case 80:
+        Serial.println("Étape 80 : Extinction du troisième feu stop");
+        third_brake.stop();
+        break;
+
+      case 85:
+        Serial.println("Étape 85 : Extinction de la marche arrière");
+        backward.stop();
+        break;
+
+      case 90:
+        Serial.println("Étape 90 : Extinction des freins");
+        brakes.stop();
+        break;
+
+      case 95:
+        Serial.println("Étape 95 : Extinction des LED arrière");
+        b_led.stop();
+        break;
+
+      case 100:
+        Serial.println("Étape 100 : Extinction des clignotants gauche et droit");
+        clignotantGauche.stop();
+        clignotantDroit.stop();
+        break;
+
+      case 105:
+        Serial.println("Étape 105 : Extinction des Angel Eyes");
+        angelEyes.stop();
+        break;
+
+      case 110:
+        Serial.println("Étape 110 : Extinction des phares");
+        headlights.stop();
+        headlights.setEtatBas(0);
+        break;
+
+      case 115:
+        Serial.println("Redémarrage du scénario EXPO");
+        step_expo = -1; // Réinitialisation (passera à 0 au prochain incrément)
+        break;
+
+      default:
+        //Serial.print("Étape inconnue ou sans action : ");
+        //Serial.println(step);
+        break;
+    }
+
+    step_expo++; // Incrémente l'étape
+  }
+}
+
 
 void handleMessage() {
   // Vérifie si la file d'attente contient un message
