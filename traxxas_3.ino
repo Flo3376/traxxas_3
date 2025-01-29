@@ -21,13 +21,14 @@
 bool hasBraked = false;        	// Indique si un freinage a été effectué (Traxxas seulement)
 bool possibleReverse = false;  	// Indique si la marche arrière est possible après un freinage (Traxxas seulement)
 bool blink = false;            	// Variable globale pour gérer la synchronisation
-bool blink_hs = false;   		// Variable globale pour gérer la synchronisation
+bool blink_hs = false;   		    // Variable globale pour gérer la synchronisation
 bool blink_degraded = false;   	// Variable globale pour gérer la synchronisation
 bool tilted = false;          	// si la voiture est en trop penchée
 bool use_wifi = false;        	// activation ou non du wifi dés de démarrage de l'esp
 int transmit_mod = 1;          	// mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
-bool initialized_expo = false;		// Assure que les bips de démarrage ne se jouent qu'une seule fois dans le mod EXPO
-int step_expo = 0;                   // Étape actuelle dans le scénario EXPO
+bool initialized_expo = false;	// Assure que les bips de démarrage ne se jouent qu'une seule fois dans le mod EXPO
+int step_expo = 0;              // Étape actuelle dans le scénario EXPO
+bool isInMode3 = false;         // Indique si on est activement dans le mode 3
 
 /*=====================================*/
 /*  Déclaration des servos (sorties)   */
@@ -160,6 +161,7 @@ void loop() {
   static unsigned long last_1000_Loop = 0;   // La dernière fois l'on a mesuré les 1s
   static unsigned long last_5000_Loop = 0;   // La dernière fois l'on a mesuré les 5
   static unsigned long last_10000_Loop = 0;  // La dernière fois l'on a mesuré les 10s
+  
 
   /*=====   Toutes les 50 ms   =======*/
   if (currentMillis - last_50_Loop >= Interval_50) {
@@ -343,6 +345,8 @@ void scenarioNormal() {
   clignotantGauche.update(blink);
   clignotantDroit.update(blink);
 
+  static unsigned long last_7500_Loop = 0;  // La dernière fois l'on a mesuré les 10s
+
   /*=====   on remet le mod EXPO à 0    =======*/
   initialized_expo=false;
   step_expo=0;
@@ -382,6 +386,7 @@ void scenarioNormal() {
       clignotantDroit.setEtatBas(0);
       headlights.setEtatBas(0);
       headlights.stop();
+      b_led.stop();
 
       break;
 
@@ -405,6 +410,8 @@ void scenarioNormal() {
       angelEyes.run();
       brakes.setEtatBas(25);      // Faible luminosité pour feu stop
       headlights.setEtatBas(80);  // Luminosité moyenne pour les phares
+      b_led.stop();
+      headlights.stop();
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
 
@@ -416,12 +423,28 @@ void scenarioNormal() {
       } else {
         clignotantDroit.setEtatBas(american ? 40 : 0);
       }
+      isInMode3 = false;
+
+    // Vérifier si on doit passer en mode 3
+    if (throttle_data > 50) {
+      light_mod_mode = 3;
+      last_7500_Loop = millis(); // Initialiser le timer lors du passage au mode 3
+      isInMode3 = true;
+      Serial.println("Passage au mode 3");
+    }
       break;
 
     case 3:  // Mode 3 : Plein phares
+
+    if (!isInMode3) {
+      // Passage initial au mode 3
+      isInMode3 = true;
+      last_7500_Loop = millis(); // Initialiser le timer
+    }
       angelEyes.run();
       brakes.setEtatBas(25);  // Faible luminosité pour feu stop
       headlights.run();       // Phares à pleine puissance
+      b_led.run();
       if (clignotantGauche.get_actif()) {
         clignotantGauche.setEtatBas(0);
       } else {
@@ -431,6 +454,15 @@ void scenarioNormal() {
         clignotantDroit.setEtatBas(0);
       } else {
         clignotantDroit.setEtatBas(american ? 40 : 0);
+      }
+      // Gestion du timer pour revenir au mode 2
+      if (throttle_data > 50) {
+        last_7500_Loop = millis(); // Réinitialiser le timer si l'accélération est au-dessus de 50 %
+        Serial.println("Maintien du mode 3");
+      } else if (millis() - last_7500_Loop >= Interval_7500) { 
+        light_mod_mode = 2;    // Retour au mode 2 après temporisation
+        isInMode3 = false;
+        Serial.println("Retour automatique au mode 2");
       }
       break;
   }
@@ -460,15 +492,10 @@ void scenarioNormal() {
     } else {
       clignotantGauche.stop();
     }
+    
   }
 
   /*=====   surveillance frein et accélérrateur   =======*/
-  // Allume la barre de LED si l'accélérateur est actif à plus de 50%
-  if (throttle_data > 50 && (light_mod_mode == 2 || light_mod_mode == 3)) {
-    b_led.run();
-  } else {
-    b_led.stop();
-  }
   if (!traxxas) {
     /*=====   Mode Axial =======*/
     if (throttle_data > DEAD_ZONE) {  //si la position de l'accellérateur est au dessus de la zone morte (on avance)

@@ -180,7 +180,8 @@ const unsigned long Interval_125= 125;        //125 ms
 const unsigned long Interval_250= 250;        //250 ms
 const unsigned long Interval_500= 500;        //500 ms
 const unsigned long Interval_1000= 1000;      // 1 s
-const unsigned long Interval_5000= 1000;      // 5 s
+const unsigned long Interval_5000= 5000;      // 5 s
+const unsigned long Interval_7500= 7500;      //7,5 s
 const unsigned long Interval_10000= 10000;    //10 s
 
 #endif

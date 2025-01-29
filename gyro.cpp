@@ -12,8 +12,8 @@ float accelOffsetX = 0, accelOffsetY = -0, accelOffsetZ = -9.47;
 float roll = 5.0, pitch = 5.0;
 float ax = -0.66, ay = -0.66, az = 9.41;
 
-int limit_g_x=10;
-int limit_g_y=15;
+int limit_g_x=30;
+int limit_g_y=30;
 
 int orientation_gyro=1;
 

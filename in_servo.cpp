@@ -22,7 +22,6 @@ int light_mod_mode = 0; // Définition de la variable
 
 
 // Variables globales pour surveiller le throttle
-int last_significant_throttle = 0;  //!! à remettre à zero en production
 unsigned long last_activity_time = millis();
 VehiculeMode vehicule_mode = WAIT; // Définition de la variable globale
 VehiculeMode last_vehicule_mode = WAIT; // Initialisé à NORMAL par défaut
@@ -32,10 +31,11 @@ void monitorThrottle() {
     unsigned long current_time = millis();
 
     // Vérifier si la variation est significative
-    if (abs(current_throttle - last_significant_throttle) > 5) {
-        last_significant_throttle = current_throttle; // Mise à jour de la valeur significative
+    if (abs(current_throttle) > DEAD_ZONE) {
+        //last_significant_throttle = current_throttle; // Mise à jour de la valeur significative
         last_activity_time = current_time;           // Réinitialiser le compteur
     }
+
 
     // Calculer le temps écoulé depuis la dernière activité
     unsigned long inactivity_duration = current_time - last_activity_time;
