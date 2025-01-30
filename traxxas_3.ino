@@ -18,17 +18,19 @@
 /*======================*/
 //      Variables       //
 /*======================*/
-bool hasBraked = false;        	// Indique si un freinage a été effectué (Traxxas seulement)
-bool possibleReverse = false;  	// Indique si la marche arrière est possible après un freinage (Traxxas seulement)
-bool blink = false;            	// Variable globale pour gérer la synchronisation
-bool blink_hs = false;   		    // Variable globale pour gérer la synchronisation
-bool blink_degraded = false;   	// Variable globale pour gérer la synchronisation
-bool tilted = false;          	// si la voiture est en trop penchée
-bool use_wifi = false;        	// activation ou non du wifi dés de démarrage de l'esp
-int transmit_mod = 1;          	// mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
-bool initialized_expo = false;	// Assure que les bips de démarrage ne se jouent qu'une seule fois dans le mod EXPO
+bool hasBraked = false;        // Indique si un freinage a été effectué (Traxxas seulement)
+bool possibleReverse = false;  // Indique si la marche arrière est possible après un freinage (Traxxas seulement)
+bool blink = false;            // Variable globale pour gérer la synchronisation
+bool blink_hs = false;         // Variable globale pour gérer la synchronisation
+bool blink_degraded = false;   // Variable globale pour gérer la synchronisation
+bool tilted = false;           // si la voiture est en trop penchée
+
+int transmit_mod = 1;           // mod de transmition au démarrage 0-pour silence  1-pour le systéme 2-pour le gyro / 3-pour les servos / 4-pour les sortie
+bool initialized_expo = false;  // Assure que les bips de démarrage ne se jouent qu'une seule fois dans le mod EXPO
 int step_expo = 0;              // Étape actuelle dans le scénario EXPO
 bool isInMode3 = false;         // Indique si on est activement dans le mode 3
+bool wifiEnabled = true;
+bool use_wifi = false;  // activation ou non du wifi dés de démarrage de l'esp
 
 /*=====================================*/
 /*  Déclaration des servos (sorties)   */
@@ -161,7 +163,7 @@ void loop() {
   static unsigned long last_1000_Loop = 0;   // La dernière fois l'on a mesuré les 1s
   static unsigned long last_5000_Loop = 0;   // La dernière fois l'on a mesuré les 5
   static unsigned long last_10000_Loop = 0;  // La dernière fois l'on a mesuré les 10s
-  
+
 
   /*=====   Toutes les 50 ms   =======*/
   if (currentMillis - last_50_Loop >= Interval_50) {
@@ -179,6 +181,36 @@ void loop() {
     backward.update(false);
     b_led.update(false);
     angelEyes.update(false);
+
+    /*=====   Surveillance de la demande de commutation du wifi   =======*/
+    // Vérifier si un appui long a été détecté
+    if (lightModLongPressDetected) {
+      lightModLongPressDetected = false;  // Réinitialiser l'état
+      use_wifi = !use_wifi;               // Bascule ON/OFF
+
+      if (use_wifi) {
+        Serial.println("Nouveau statut demandé: Wi-Fi activé");
+        wifiWebSocket.start();  // Activer le Wi-Fi
+
+        for (int i = 0; i < 4; i++) {
+          digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
+          delay(75);
+          digitalWrite(S_9_PWM, LOW);
+          delay(50);  // Assurer un cycle complet ON/OFF
+        }
+
+      } else {
+        Serial.println("Nouveau statut demandé: Wi-Fi désactivé");
+        wifiWebSocket.stop();  // Désactiver le Wi-Fi
+
+        for (int i = 0; i < 6; i++) {
+          digitalWrite(S_9_PWM, HIGH);  // Éteindre la PWM
+          delay(75);
+          digitalWrite(S_9_PWM, LOW);
+          delay(50);  // Assurer un cycle complet ON/OFF
+        }
+      }
+    }
 
     /*=====   reception des message depuis le smartphone si le wifi est activé   =======*/
     if (use_wifi) {
@@ -348,8 +380,8 @@ void scenarioNormal() {
   static unsigned long last_7500_Loop = 0;  // La dernière fois l'on a mesuré les 10s
 
   /*=====   on remet le mod EXPO à 0    =======*/
-  initialized_expo=false;
-  step_expo=0;
+  initialized_expo = false;
+  step_expo = 0;
 
   /*=====   surveillance gyro :  si le 4x4 atteint un angle trop élevé    =======*/
 
@@ -425,22 +457,22 @@ void scenarioNormal() {
       }
       isInMode3 = false;
 
-    // Vérifier si on doit passer en mode 3
-    if (throttle_data > 50) {
-      light_mod_mode = 3;
-      last_7500_Loop = millis(); // Initialiser le timer lors du passage au mode 3
-      isInMode3 = true;
-      Serial.println("Passage au mode 3");
-    }
+      // Vérifier si on doit passer en mode 3
+      if (throttle_data > 50) {
+        light_mod_mode = 3;
+        last_7500_Loop = millis();  // Initialiser le timer lors du passage au mode 3
+        isInMode3 = true;
+        Serial.println("Passage au mode 3");
+      }
       break;
 
     case 3:  // Mode 3 : Plein phares
 
-    if (!isInMode3) {
-      // Passage initial au mode 3
-      isInMode3 = true;
-      last_7500_Loop = millis(); // Initialiser le timer
-    }
+      if (!isInMode3) {
+        // Passage initial au mode 3
+        isInMode3 = true;
+        last_7500_Loop = millis();  // Initialiser le timer
+      }
       angelEyes.run();
       brakes.setEtatBas(25);  // Faible luminosité pour feu stop
       headlights.run();       // Phares à pleine puissance
@@ -457,10 +489,10 @@ void scenarioNormal() {
       }
       // Gestion du timer pour revenir au mode 2
       if (throttle_data > 50) {
-        last_7500_Loop = millis(); // Réinitialiser le timer si l'accélération est au-dessus de 50 %
+        last_7500_Loop = millis();  // Réinitialiser le timer si l'accélération est au-dessus de 50 %
         Serial.println("Maintien du mode 3");
-      } else if (millis() - last_7500_Loop >= Interval_7500) { 
-        light_mod_mode = 2;    // Retour au mode 2 après temporisation
+      } else if (millis() - last_7500_Loop >= Interval_7500) {
+        light_mod_mode = 2;  // Retour au mode 2 après temporisation
         isInMode3 = false;
         Serial.println("Retour automatique au mode 2");
       }
@@ -492,7 +524,6 @@ void scenarioNormal() {
     } else {
       clignotantGauche.stop();
     }
-    
   }
 
   /*=====   surveillance frein et accélérrateur   =======*/
@@ -623,7 +654,7 @@ void scenarioExpo() {
   clignotantGauche.update(blink);
   clignotantDroit.update(blink);
 
-  static unsigned long lastActionTime = 0;    // Temps de la dernière action
+  static unsigned long lastActionTime = 0;  // Temps de la dernière action
   unsigned long currentMillis = millis();
 
   // Étape 1 : Signaler l'entrée en EXPO par 3 bips courts
@@ -634,8 +665,8 @@ void scenarioExpo() {
       digitalWrite(S_9_PWM, LOW);
       delay(125);
     }
-    initialized_expo = true; // Les bips sont joués une seule fois
-    lastActionTime = currentMillis; // Synchronisation pour la séquence lumineuse
+    initialized_expo = true;         // Les bips sont joués une seule fois
+    lastActionTime = currentMillis;  // Synchronisation pour la séquence lumineuse
 
     // Extinction complète avant de commencer
     brakes.stop();
@@ -648,7 +679,7 @@ void scenarioExpo() {
   }
 
   // Étape 2 : Gestion des lumières (allumage progressif avec clignotements)
-  if (currentMillis - lastActionTime >= 500) { // Exécuter toutes les 500 ms
+  if (currentMillis - lastActionTime >= 500) {  // Exécuter toutes les 500 ms
     lastActionTime = currentMillis;
 
     // Gestion des étapes avec un switch
@@ -779,7 +810,7 @@ void scenarioExpo() {
 
       case 115:
         Serial.println("Redémarrage du scénario EXPO");
-        step_expo = -1; // Réinitialisation (passera à 0 au prochain incrément)
+        step_expo = -1;  // Réinitialisation (passera à 0 au prochain incrément)
         break;
 
       default:
@@ -788,7 +819,7 @@ void scenarioExpo() {
         break;
     }
 
-    step_expo++; // Incrémente l'étape
+    step_expo++;  // Incrémente l'étape
   }
 }
 

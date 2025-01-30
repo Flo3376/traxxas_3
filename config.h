@@ -162,7 +162,7 @@ const int light_mod= channel_1;
 //     Mods veilles     //
 /*======================*/
 // Délais pour les modes veilles
-const unsigned long WAIT_TIMEOUT = 10000;  // 10 secondes
+const unsigned long WAIT_TIMEOUT = 20000;  // 10 secondes
 const unsigned long FORGET_TIMEOUT = 120000; // 2 minutes
 const unsigned long EXPO_TIMEOUT = 300000; // 5 minutes
 
