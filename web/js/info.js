@@ -7,19 +7,19 @@ const InfoManager = (function () {
     // Met à jour les informations dans le panneau
     function displayInfo(data) {
         const uptimeFormatted = formatUptime(data.uptime);
-        const rssiColor = getRssiColor(data.rssi);
-        const content = `
-            <p><strong style="color:orange">Nom:</strong> ${data.name}</p>
+        const rssiColor = getRssiColor(systemData.rssi);
+         const content = `
+            <p><strong style="color:orange">Nom:</strong> ${systemData.name}</p>
             <hr>
-            <p><strong style="color:orange">Version:</strong> ${data.version}</p>
-            <p><strong style="color:orange">Adresse IP locale:</strong> ${data.localip}</p>
-            <p><strong style="color:orange">SSID:</strong> ${data.ssid}</p>
-             <p><strong style="color:orange">RSSI:</strong> <span style="color:${rssiColor}">${data.rssi} dBm</span></p>
+            <p><strong style="color:orange">Version:</strong> ${systemData.version}</p>
+            <p><strong style="color:orange">Adresse IP locale:</strong> ${systemData.localip}</p>
+            <p><strong style="color:orange">SSID:</strong> ${systemData.ssid}</p>
+            <p><strong style="color:orange">RSSI:</strong> <span style="color:${rssiColor}">${systemData.rssi} dBm</span></p>
             <hr>
-            <p><strong style="color:orange">Entrées:</strong> ${data.input}</p>
-            <p><strong style="color:orange">Sorties:</strong> ${data.output}</p>
+            <p><strong style="color:orange">Entrées:</strong> ${systemData.input}</p>
+            <p><strong style="color:orange">Sorties:</strong> ${systemData.output}</p>
             <hr>
-            <p><strong style="color:orange">Uptime:</strong> ${uptimeFormatted}</p>
+            <p><strong style="color:orange">Uptime:</strong> ${systemData.uptime}s</p>
         `;
         infoDiv.innerHTML = content;
         status.style.display = "none"; // Cache le loader

@@ -103,56 +103,6 @@ int readPWM(int pin) {
   return 0;  // Retourner 0 si aucune valeur n'a été lue
 }
 
-/*
-void handleLightMod() {
-    // Si l'état actuel est différent de l'état précédent
-    if (light_mod_data != prev_light_mod_data) {
-        // Vérifier que le bouton est en position "appuyé" (100)
-        if (light_mod_data == 100) {
-            // Incrémenter le mode avec retour à 0 après 3
-            light_mod_mode = (light_mod_mode + 1) % 4;
-
-            // Afficher le mode actuel pour debug
-            if (Debug_Input_Servo) {
-                Serial.print("Light Mod mode changé : ");
-                Serial.println(light_mod_mode);
-            }
-        }
-
-        // Mettre à jour la valeur précédente
-        prev_light_mod_data = light_mod_data;
-    }
-}*/
-/*
-void handleLightMod() {
-    if (light_mod_data != prev_light_mod_data) {
-        if (light_mod_data == 100) { // Bouton pressé
-            lightModPressStart = millis();
-            Serial.println("Appui détecté");
-        } else if (light_mod_data == -100) { // Bouton relâché
-            if (!lightModLongPressDetected) { // Vérifier si on n'a pas déjà détecté l’appui long
-                // Changement normal du mode d'éclairage
-                light_mod_mode = (light_mod_mode + 1) % 4;
-                if (Debug_Input_Servo) {
-                    Serial.print("Light Mod mode changé : ");
-                    Serial.println(light_mod_mode);
-                }
-            }
-            // Réinitialiser l’état de l’appui long
-            lightModLongPressDetected = false;
-        }
-
-        prev_light_mod_data = light_mod_data;
-    }
-
-    // Vérifier en continu si l'appui long est dépassé
-    if (light_mod_data == 100 && millis() - lightModPressStart >= 5000 && !lightModLongPressDetected) {
-        lightModLongPressDetected = true; // Éviter de répéter
-        Serial.println("Appui long détecté : demande de changement Wi-Fi");
-    }
-}*/
-
-
 void handleLightMod() {
     if (light_mod_data != prev_light_mod_data) {
         if (light_mod_data == 100) { // Bouton pressé

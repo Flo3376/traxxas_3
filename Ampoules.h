@@ -1,6 +1,7 @@
 #ifndef AMPOULES_H
 #define AMPOULES_H
 
+#include <ArduinoJson.h>  // Lib pour l'utilisation du format JSON
 #include <Arduino.h>
 
 class Ampoule {
@@ -30,12 +31,13 @@ public:
 
     void run();
     void stop();
-    bool get_actif();
+    bool get_actif() const;  // Ajout de 'const' ici
     void forceOutput(int valeur);
     void update(bool blinkState);
     void setEtatBas(int bas);
     void setEtatHaut(int haut);
     String getStatus();
+    String getInfo() const;
 };
 
 #endif

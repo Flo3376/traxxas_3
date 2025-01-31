@@ -106,26 +106,25 @@ const WebSocketManager = (function () {
 
                 if (data.type === "pong") {
                     console.log("Pong reçu !");
-                } else if (data.type === "simulation") {
-                    // Exemple : gérer les données de simulation
-                    setX(data.roll);
-                    setY(data.pitch);
-                } else if (data.type === "info") {
-                    InfoManager.displayInfo(data);
-                } 
-                else if (data.type === "gyro") {
-                        GyroManager.setX(data.roll);
-                        GyroManager.setY(data.pitch);
-                        GyroManager.SetOffset_X(data.Offset_X);
-                        GyroManager.SetOffset_Y(data.Offset_Y);
-                        GyroManager.Setlimit_g_x(data.Limit_g_x);
-                        GyroManager.Setlimit_g_y(data.Limit_g_y);
-                        //setX(data.roll);
-                        //setY(data.pitch);
+                } else if (data.type === "data") {
+                    if (activeTab === "global") {
+                        InfoManager.displayInfo(data.system);
+                    } 
+                    else if (activeTab === "gyro") {
+                        GyroManager.setX(data.gyro.roll);
+                        GyroManager.setY(data.gyro.pitch);
+                        GyroManager.SetOffset_X(data.gyro.offsetX);
+                        GyroManager.SetOffset_Y(data.gyro.offsetY);
+                        GyroManager.Setlimit_g_x(data.gyro.limit_x);
+                        GyroManager.Setlimit_g_y(data.gyro.limit_y);
                     }
-                else if (data.type === "channels") {
-                        updateGauges(data);
+                    else if (activeTab === "force") {
+                        updateGauges(data.in_servo);
                     }
+
+
+
+                }
                 else {
                     console.warn("Message inconnu ou inattendu :", data);
                 }

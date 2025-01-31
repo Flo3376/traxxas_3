@@ -27,6 +27,8 @@ extern int light_mod_data;
 extern int light_mod_mode;       // Variable pour le mode (0 à 3)
 extern bool lightModLongPressDetected; // Détection d'un appui long
 
+extern int data_channels[6];
+
 /*======================*/
 //  Gestion des entrées //
 /*======================*/

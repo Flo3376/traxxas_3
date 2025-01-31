@@ -181,11 +181,20 @@
             console.error("Erreur lors du chargement du SVG :", error);
         });
 });
-
-
-
-
 </script>
+
+<script>
+    let activeTab = "global"; // Onglet par défaut
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".nav-link").forEach(tab => {
+            tab.addEventListener("click", (event) => {
+                activeTab = event.target.id.replace("-tab", ""); // Ex: "gyro-tab" -> "gyro"
+            });
+        });
+    });
+</script>
+
 
 <script src="https://flo3376.github.io/traxxas_3/web/js/websocket.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/gauge.js"></script>
@@ -219,6 +228,8 @@
         WebSocketManager.scanAndConnect(); // Démarre la recherche
     });
 </script>
+
+
 
 </body>
 </html>

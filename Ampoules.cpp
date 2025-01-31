@@ -90,10 +90,9 @@ void Ampoule::stop() {
   }
 }
 
-bool  Ampoule::get_actif()
-{
-  return actif;
-  }
+bool Ampoule::get_actif() const {  // Ajout de 'const' ici aussi
+    return actif;
+}
 // Méthode forceOutput
 void Ampoule::forceOutput(int valeur) {
   if (valeur < 0) {
@@ -149,3 +148,20 @@ String Ampoule::getStatus() {
   status += ", Forcer: " + String(forcerActif ? "Oui" : "Non");
   return status;
 }
+
+String Ampoule::getInfo() const {
+    JsonDocument doc;
+
+    doc["name"] = nom;
+    doc["pin"] = pin;
+    doc["etat_bas"] = etatBas;
+    doc["etat_haut"] = etatHaut;
+    doc["mode"] = methode;
+    doc["actif"] = get_actif();
+
+    String jsonString;
+    serializeJson(doc, jsonString);
+    return jsonString;
+}
+
+

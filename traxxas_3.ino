@@ -96,7 +96,7 @@ void setup() {
   headlights.init(PIN_headlights, ETAT_BAS_headlights, ETAT_HAUT_headlights, "Feux Avant", "PWM", VITESSE_headlights);                                              // Initialisation des feux avant
   BUZZER_WARNING.init(PIN_BUZZER, ETAT_BAS_BUZZER, ETAT_HAUT_BUZZER, "Buzzer", "BUZ", 0, VITESSE_BUZZER);                                                           // Initialisation du buzzer
   backward.init(PIN_BACKWARD, ETAT_BAS_BACKWARD, ETAT_HAUT_BACKWARD, "Feu de Recul", "TOR", 0, VITESSE_BACKWARD);                                                   // Initialisation du feu de recul
-  b_led.init(PIN_BAL, ETAT_BAS_BAL, ETAT_HAUT_BAL, "Feu de Recul", "TOR", 0, VITESSE_BAL);                                                                          // Initialisation du feu de recul
+  b_led.init(PIN_BAL, ETAT_BAS_BAL, ETAT_HAUT_BAL, "Barre de Led", "TOR", 0, VITESSE_BAL);                                                                          // Initialisation du feu de recul
 
   /*=====================================*/
   /* Intialisation des servos (sorties)  */
@@ -301,7 +301,7 @@ void loop() {
 	    - Il surcharge le fonctionnement standard du véhicule pour imposer un contrôle manuel ou des tests.
 	*/
     if (use_wifi) {
-      if (transmit_mod == 2) {
+      /*if (transmit_mod == 2) {
         // Envoie les données du gyroscope au smartphone
         String data_to_send = generateGyroJson();  // Génère les données JSON du gyroscope
         wifiWebSocket.sendData(data_to_send);      // Envoie via WebSocket
@@ -310,7 +310,7 @@ void loop() {
         // Envoie les données des servos au smartphone
         String jsonData = generateServoJson();  // Génère les données JSON des servos
         wifiWebSocket.sendData(jsonData);       // Envoie via WebSocket
-      }
+      }*/
     }
   }
 
@@ -323,6 +323,9 @@ void loop() {
   /*=====   Toutes les 1 s   =======*/
   if (currentMillis - last_1000_Loop >= Interval_1000) {
     last_1000_Loop = currentMillis;
+    if (use_wifi) {
+      sendDataToSmartphone();
+    }
   }
 
   /*=====   Toutes les 5 s   =======*/
@@ -330,7 +333,7 @@ void loop() {
     last_5000_Loop = currentMillis;
 
     /*=====   transmition vers le smartphone si le wifi est activé   =======*/
-    if (transmit_mod == 1 && use_wifi) {
+    /*if (transmit_mod == 1 && use_wifi) {
 
       JsonDocument doc;
       doc["type"] = "info";                        // Type de message (info général)
@@ -345,7 +348,7 @@ void loop() {
       String jsonString;
       serializeJson(doc, jsonString);
       wifiWebSocket.sendData(jsonString);
-    }
+    }*/
   }
 
 
@@ -821,6 +824,77 @@ void scenarioExpo() {
 
     step_expo++;  // Incrémente l'étape
   }
+}
+
+void sendDataToSmartphone() {
+  JsonDocument doc;
+
+  /*=====   Section systeme =======*/
+  doc["type"] = "data";
+  doc["system"]["name"] = car_name;
+  doc["system"]["version"] = version_soft;
+  doc["system"]["localip"] = WiFi.localIP().toString();
+  doc["system"]["uptime"] = millis() / 1000;
+  doc["system"]["ssid"] = WIFI_SSID;
+  doc["system"]["rssi"] = WiFi.RSSI();
+  doc["system"]["output"] = output_u;
+  doc["system"]["input"] = input_u;
+
+  /*=====   Section gyro =======*/
+  doc["gyro"]["roll"] = roll;
+  doc["gyro"]["pitch"] = pitch;
+  doc["gyro"]["tilted"] = tilted;
+  doc["gyro"]["offsetX"] = gyroOffsetX;
+  doc["gyro"]["offsetY"] = gyroOffsetY;
+  doc["gyro"]["offsetZ"] = gyroOffsetZ;
+  doc["gyro"]["limit_x"] = limit_g_x;
+  doc["gyro"]["limit_y"] = limit_g_y;
+
+  /*=====   Section servo / récepteur =======*/
+  const char* inputNames[] = { "steer", "throttle", "brake", "gear_box", "front_diff", "rear_diff",
+                               "light", "winch", "horn", "light_mod" };
+  int inputValues[] = { steer, throttle, brake, gear_box, front_diff, rear_diff,
+                        light, winch, horn, light_mod };
+
+  int index = 0;  // Indice propre pour éviter les `null`
+  const int inputCount = sizeof(inputNames) / sizeof(inputNames[0]);
+
+  // Boucle dynamique : Ajoute uniquement les entrées valides
+  for (int i = 0; i < inputCount; i++) {
+    if (inputValues[i] != -1) {                                          // Vérifie si l'entrée est attribuée
+      doc["in_servo"][index]["name"] = inputNames[i];                    // Nom du canal
+      doc["in_servo"][index]["value"] = getChannelData(inputValues[i]);  // Valeur associée
+      index++;                                                           // Incrémentation de l'indice valide
+    }
+  }
+
+  /*=====   Section ampoules =======*/
+  // Liste des ampoules définies
+  Ampoule* ampoules[] = { &clignotantGauche, &clignotantDroit, &angelEyes, &third_brake, &brakes, &headlights, &BUZZER_WARNING, &backward, &b_led };
+  index = 0;
+
+  int arraySize = sizeof(ampoules) / sizeof(ampoules[0]);  //Calcul dynamique de la taille du tableau
+
+  // Boucle dynamique : Ajoute toutes les ampoules avec `getInfo()`
+  for (int i = 0; i < arraySize; i++) {
+
+    String ampouleInfo = ampoules[i]->getInfo();           // Récupère l’info JSON
+    deserializeJson(doc["ampoules"][index], ampouleInfo);  // Convertit la chaîne en objet JSON
+    index++;                                               // Incrémentation de l'indice valide
+  }
+
+
+  /*=====   Section servo / sortie =======*/
+  doc["out_servo"]["s1"] = servo1->getCurrentAngle();
+  doc["out_servo"]["s2"] = servo2->getCurrentAngle();
+  doc["out_servo"]["s3"] = servo3->getCurrentAngle();
+
+  // Conversion et envoi des données JSON
+  String jsonString;
+  serializeJson(doc, jsonString);
+  wifiWebSocket.sendData(jsonString);
+
+  //Serial.println("Données envoyées : " + jsonString);
 }
 
 
