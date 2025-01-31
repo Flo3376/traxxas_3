@@ -7,15 +7,16 @@ Adafruit_MPU6050 mpu;
 // Variables globales
 bool debug_gyro = false;
 
-float gyroOffsetX = -3.3, gyroOffsetY = 6.7, gyroOffsetZ = 0.0;
+float gyroOffsetX = 2.1, gyroOffsetY = 2.7, gyroOffsetZ = 0.0;
+//float gyroOffsetX = -3.3, gyroOffsetY = 6.7, gyroOffsetZ = 0.0;
 float accelOffsetX = 0, accelOffsetY = -0, accelOffsetZ = -9.47;
 float roll = 5.0, pitch = 5.0;
 float ax = -0.66, ay = -0.66, az = 9.41;
 
-int limit_g_x=30;
-int limit_g_y=30;
+int limit_g_x=25;
+int limit_g_y=25;
 
-int orientation_gyro=1;
+int orientation_gyro=4;
 
 //unsigned long previousGyroMillis = 0;         // Dernière lecture du gyroscope
 //const unsigned long gyroInterval = 5000;      // Intervalle en millisecondes (2 secondes)
