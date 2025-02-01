@@ -120,8 +120,8 @@ const WebSocketManager = (function () {
                     }
                     else if (activeTab === "servo_in") {
                         if (data.in_servo && Array.isArray(data.in_servo)) {
-        JaugeManager.handleData(data); // Gère les jauges dynamiquement
-    }
+                            JaugeManager.handleData(data); // Gère les jauges dynamiquement
+                        }
                     }
                     else if (activeTab === "force") {
                         updateGauges(data.in_servo);
