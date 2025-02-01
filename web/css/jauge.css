@@ -1,4 +1,4 @@
-/* 📏 Conteneur général des jauges */
+/* 🎯 Conteneur des jauges */
 .gauge-container {
     display: flex;
     justify-content: space-around;
@@ -15,7 +15,7 @@
     text-align: center;
 }
 
-/* 🏗️ Jauge générique */
+/* 🏗️ Base des jauges */
 .gauge {
     width: 30px;
     height: 200px;
@@ -26,47 +26,49 @@
     margin: 0 auto;
 }
 
-/* 🌡️ Remplissage des jauges normales (ex: Steer, Light) */
-.fill {
+/* 🎯 Jauge 1 sens (Throttle & Brake) */
+.one-way-gauge .fill {
     position: absolute;
+    bottom: 0;
     width: 100%;
+    background-color: limegreen;
+    height: 0;
     transition: height 0.2s ease-in-out;
 }
 
-/* ✅ Zone positive (au-dessus du zéro) pour les jauges normales */
-.fill-positive {
+/* 🎯 Jauge 2 sens (Steer, etc.) */
+.two-way-gauge .fill-positive {
+    position: absolute;
+    bottom: 100px; /* Centre */
+    width: 100%;
     background-color: limegreen;
-    bottom: 100px; /* Point neutre */
     height: 0;
+    transition: height 0.2s ease-in-out;
 }
 
-/* ✅ Zone négative (en dessous du zéro) pour les jauges normales */
-.fill-negative {
-    background-color: red;
+.two-way-gauge .fill-negative {
+    position: absolute;
     bottom: 0;
+    width: 100%;
+    background-color: red;
     height: 0;
+    transition: height 0.2s ease-in-out;
 }
 
-/* 🚀 Throttle et Brake commencent **du bas** */
-.special-gauge .fill-positive,
-.special-gauge .fill-negative {
-    bottom: 0 !important;
-}
-
-/* ⚪ Ligne blanche du zéro (sauf pour Throttle & Brake) */
-.zero-line {
+/* ⚪ Ligne blanche pour le centre des jauges 2 sens */
+.two-way-gauge .zero-line {
     position: absolute;
     top: 50%;
-    left: -10%;
-    width: 120%;
+    left: 0;
+    width: 100%;
     height: 2px;
     background-color: white;
-    transform: translateY(-1px);
+    transform: translateY(-50%);
     z-index: 1;
 }
 
-/* ❌ Supprime la ligne blanche pour Throttle & Brake */
-.special-gauge .zero-line {
+/* ❌ Pas de ligne blanche pour Throttle & Brake */
+.one-way-gauge .zero-line {
     display: none !important;
 }
 
