@@ -1,5 +1,6 @@
 const AmpoulesManager = (function () {
     let initialized = false;
+    const buttonStates = {}; // Stocke l'état des boutons (indépendant du JSON)
 
     function initializeAmpoules(ampoules) {
         if (initialized) return;
@@ -14,20 +15,27 @@ const AmpoulesManager = (function () {
             // Déterminer la couleur de l'ampoule
             const iconClass = getAmpouleClass(ampoule);
 
+            // Initialiser l'état du bouton (par défaut : auto)
+            if (!buttonStates[ampoule.pin]) {
+                buttonStates[ampoule.pin] = "auto";
+            }
+            const buttonState = buttonStates[ampoule.pin];
+            const buttonClass = getButtonClass(buttonState);
+
             ampouleBox.innerHTML = `
                 <div class="ampoule-name">${ampoule.name}</div>
-                <i class="fas fa-lightbulb ${iconClass}"></i>
+                <i class="fas fa-lightbulb ${iconClass}" id="icon-${ampoule.pin}"></i>
                 <div class="ampoule-info">
                     <span class="titre">Pin:</span> ${ampoule.pin} | 
                     <span class="titre">Mode:</span> ${ampoule.mode} | 
                     <span class="titre">État:</span> ${ampoule.etat_bas} → ${ampoule.etat_haut}
                 </div>
-                <button class="ampoule-btn auto" data-state="auto" id="btn-${ampoule.pin}">Auto</button>
+                <button class="ampoule-btn ${buttonClass}" data-state="${buttonState}" id="btn-${ampoule.pin}">${capitalize(buttonState)}</button>
             `;
 
             // Ajoute l'événement pour le bouton ON/OFF/AUTO
             ampouleBox.querySelector(".ampoule-btn").addEventListener("click", (event) => {
-                toggleAmpouleState(event.target);
+                toggleAmpouleState(event.target, ampoule.pin);
             });
 
             container.appendChild(ampouleBox);
@@ -37,57 +45,33 @@ const AmpoulesManager = (function () {
     }
 
     function updateAmpoules(ampoules) {
-        const container = document.getElementById("ampoules-list");
-        container.innerHTML = ""; // Rafraîchissement
-
         ampoules.forEach(ampoule => {
-            const ampouleBox = document.createElement("div");
-            ampouleBox.classList.add("ampoule-box");
-
-            const iconClass = getAmpouleClass(ampoule);
-
-            ampouleBox.innerHTML = `
-                <div class="ampoule-name">${ampoule.name}</div>
-                <i class="fas fa-lightbulb ${iconClass}"></i>
-                <div class="ampoule-info">
-                    <span class="titre">Pin:</span> ${ampoule.pin} | 
-                    <span class="titre">Mode:</span> ${ampoule.mode} | 
-                    <span class="titre">État:</span> ${ampoule.etat_bas} → ${ampoule.etat_haut}
-                </div>
-                <button class="ampoule-btn auto" data-state="auto" id="btn-${ampoule.pin}">Auto</button>
-            `;
-
-            ampouleBox.querySelector(".ampoule-btn").addEventListener("click", (event) => {
-                toggleAmpouleState(event.target);
-            });
-
-            container.appendChild(ampouleBox);
+            const icon = document.getElementById(`icon-${ampoule.pin}`);
+            if (icon) {
+                // Met à jour la classe de l'icône en fonction de l'état
+                const iconClass = getAmpouleClass(ampoule);
+                icon.className = `fas fa-lightbulb ${iconClass}`;
+            }
         });
     }
 
-    function toggleAmpouleState(button) {
-        const currentState = button.getAttribute("data-state");
+    function toggleAmpouleState(button, pin) {
+        const currentState = buttonStates[pin];
         let newState;
 
         // Alterne entre les trois états
         if (currentState === "auto") {
             newState = "on";
-            button.classList.remove("auto");
-            button.classList.add("on");
-            button.textContent = "On";
         } else if (currentState === "on") {
             newState = "off";
-            button.classList.remove("on");
-            button.classList.add("off");
-            button.textContent = "Off";
         } else {
             newState = "auto";
-            button.classList.remove("off");
-            button.classList.add("auto");
-            button.textContent = "Auto";
         }
 
-        button.setAttribute("data-state", newState);
+        // Met à jour l'état du bouton
+        buttonStates[pin] = newState;
+        button.textContent = capitalize(newState);
+        button.className = `ampoule-btn ${getButtonClass(newState)}`;
     }
 
     function getAmpouleClass(ampoule) {
@@ -99,6 +83,16 @@ const AmpoulesManager = (function () {
             }
         }
         return "ampoule-off"; // Grise si éteinte
+    }
+
+    function getButtonClass(state) {
+        if (state === "on") return "on";
+        if (state === "off") return "off";
+        return "auto"; // Par défaut : auto
+    }
+
+    function capitalize(str) {
+        return str.charAt(0).toUpperCase() + str.slice(1);
     }
 
     return {
