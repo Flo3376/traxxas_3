@@ -1,0 +1,79 @@
+/* Conteneur principal pour les ampoules */
+.ampoule-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #444;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: white;
+    font-size: 1.2rem;
+    gap: 10px;
+}
+
+/* Nom de l'ampoule */
+.ampoule-name {
+    font-weight: bold;
+    flex: 1;
+}
+
+/* Informations complémentaires (Pin, Mode, État) */
+.ampoule-info {
+    flex: 3;
+    font-size: 0.9rem;
+    color: #ccc;
+}
+
+/* Mise en évidence des titres */
+.ampoule-info span.titre {
+    color: orange;
+    font-weight: bold;
+}
+
+/* Icônes des ampoules */
+.ampoule-on {
+    color: yellow; /* Pleine puissance */
+    font-size: 2rem;
+}
+
+.ampoule-medium {
+    color: orange; /* Intensité intermédiaire */
+    font-size: 2rem;
+}
+
+.ampoule-off {
+    color: gray; /* Éteinte */
+    font-size: 2rem;
+}
+
+/* Boutons ON/OFF/AUTO */
+.ampoule-btn {
+    flex: 1;
+    text-align: center;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+/* Bouton en mode "On" */
+.ampoule-btn.on {
+    background-color: green;
+    color: white;
+}
+
+/* Bouton en mode "Off" */
+.ampoule-btn.off {
+    background-color: red;
+    color: white;
+}
+
+/* Bouton en mode "Auto" */
+.ampoule-btn.auto {
+    background-color: gray;
+    color: white;
+}
