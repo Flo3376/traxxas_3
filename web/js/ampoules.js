@@ -75,15 +75,17 @@ const AmpoulesManager = (function () {
     }
 
     function getAmpouleClass(ampoule) {
-        if (ampoule.actif) {
-            if (ampoule.etat_bas > 0) {
-                return "ampoule-medium"; // Orange pour état intermédiaire
-            } else {
-                return "ampoule-on"; // Jaune si pleine puissance
-            }
+    if (ampoule.actif || ampoule.etat_bas > 0) {
+        // Si l'ampoule est active ou a un état bas > 0
+        if (ampoule.etat_bas > 0) {
+            return "ampoule-medium"; // Orange pour état intermédiaire
+        } else {
+            return "ampoule-on"; // Jaune si pleine puissance
         }
-        return "ampoule-off"; // Grise si éteinte
     }
+    // Si l'ampoule est inactive et a un état bas de 0
+    return "ampoule-off"; // Grise si éteinte
+}
 
     function getButtonClass(state) {
         if (state === "on") return "on";
