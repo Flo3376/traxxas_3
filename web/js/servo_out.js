@@ -21,10 +21,22 @@ const ServoOutManager = (function () {
 
             container.appendChild(controlBox);
 
-            // Écouteur pour mise à jour en temps réel
-            document.getElementById(`slider-${servo.pin}`).addEventListener("input", (event) => {
+            // Écouteur pour mettre à jour la valeur affichée
+            const slider = document.getElementById(`slider-${servo.pin}`);
+            slider.addEventListener("input", (event) => {
                 const newValue = event.target.value;
                 document.getElementById(`value-${servo.pin}`).textContent = newValue;
+            });
+
+            // Écouteur pour envoyer la commande uniquement quand le slider est relâché
+            slider.addEventListener("mouseup", (event) => {
+                const newValue = event.target.value;
+                sendServoOutUpdate(servo.pin, newValue);
+            });
+
+            // Support pour les écrans tactiles
+            slider.addEventListener("touchend", (event) => {
+                const newValue = slider.value;
                 sendServoOutUpdate(servo.pin, newValue);
             });
         });

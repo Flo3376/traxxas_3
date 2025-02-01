@@ -843,16 +843,12 @@ void sendDataToSmartphone() {
 
   CustomServo* servos[] = {servo1, servo2, servo3};
   // Boucle pour ajouter toutes les infos des servos
-for (int i = 0; i < sizeof(servos) / sizeof(servos[0]); i++) {
-    doc["out_servo"][index]["pin"] = servos[i]->getPin();        // 🔥 On ajoute la broche
-    doc["out_servo"][index]["position"] = servos[i]->getCurrentAngle();
-    index++;  
-    }
-  //doc["out_servo"]["s1"] = servo1->getCurrentAngle();
-  //doc["out_servo"]["s2"] = servo2->getCurrentAngle();
-  //doc["out_servo"]["s3"] = servo3->getCurrentAngle();
-
-  // Conversion et envoi des données JSON
+  for (int i = 0; i < sizeof(servos) / sizeof(servos[0]); i++) {
+      doc["out_servo"][index]["pin"] = servos[i]->getPin();        // 🔥 On ajoute la broche
+      doc["out_servo"][index]["position"] = servos[i]->getCurrentAngle();
+      index++;  
+      }
+    // Conversion et envoi des données JSON
   String jsonString;
   serializeJson(doc, jsonString);
   wifiWebSocket.sendData(jsonString);
@@ -954,9 +950,11 @@ void handleMessage() {
         // Trouver le servo correspondant et mettre à jour sa position
         for (int i = 0; i < 3; i++) {  // 3 servos à parcourir
           if (servos[i] != nullptr && servos[i]->getPin() == pin) {
-            servos[i]->goTo(position, 500);  // Déplacement en 500ms
+            servos[i]->jumpTo(position);  // Déplacement en 500ms
             Serial.print("Mise à jour Servo Pin ");
             Serial.print(pin);
+            Serial.print("  Mise à jour Servo ");
+            Serial.print(i);
             Serial.print(" -> Position ");
             Serial.println(position);
             break;
