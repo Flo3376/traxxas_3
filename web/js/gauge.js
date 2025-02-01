@@ -17,7 +17,7 @@ const GaugeManager = (function () {
 
             gaugeBox.innerHTML = `
                 <div class="gauge ${isSpecialGauge ? 'special-gauge' : ''}" id="gauge-${servo.name}">
-                    <div class="fill ${isSpecialGauge ? 'fill-special' : 'fill-normal'}" id="fill-${servo.name}"></div>
+                    <div class="fill" id="fill-${servo.name}"></div>
                     ${isSpecialGauge ? '' : '<div class="zero-line"></div>'} <!-- Garde la ligne blanche pour les autres -->
                 </div>
                 <div class="gauge-value" id="value-${servo.name}">0</div>
@@ -51,7 +51,12 @@ const GaugeManager = (function () {
                 } 
                 else {
                     height = (Math.abs(displayValue) / 100) * 100; // Normal pour les autres
-                    fillElement.style.bottom = "100px"; // Position du 0 au centre pour les autres
+
+                    if (displayValue >= 0) {
+                        fillElement.style.bottom = "100px"; // Monte normalement
+                    } else {
+                        fillElement.style.bottom = `${100 - height}px`; // Descend en négatif
+                    }
                 }
 
                 valueElement.textContent = displayValue; // Affichage numérique
