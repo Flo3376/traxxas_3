@@ -1,142 +1,192 @@
-/* 🎨 Général */
 body {
-    font-family: Arial, sans-serif;
-    background-color: #222;
-    color: white;
-}
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: white;
+        }
+        .btn-orange {
+            background-color: orange;
+            color: black;
+        }
+        .btn-orange:hover {
+            background-color: #ff9900;
+        }
+        .nav-link.active {
+            background-color: orange !important;
+            color: black !important;
+        }
+        .slider-container {
+            padding: 20px;
+            background-color: #333;
+            border-radius: 10px;
+        }
+        .gyro-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+        .gyro-info .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .gyro-info .label {
+            color: orange;
+        }
+        .color-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: orange;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+        }
+        #gyro-display {
+            position: relative;
+        }
+        /* HTML: <div class="loader"></div> */
+            #loader {
+              width: 50px;
+              margin: auto;
+              aspect-ratio: 1;
+              display: grid;
+              border: 4px solid #0000;
+              border-radius: 50%;
+              border-color: #ccc #0000;
+              animation: l16 1s infinite linear;
+            }
+            #loader::before,
+            #loader::after {    
+              content: "";
+              grid-area: 1/1;
+              margin: 2px;
+              border: inherit;
+              border-radius: 50%;
+            }
+            #loader::before {
+              border-color: #f03355 #0000;
+              animation: inherit; 
+              animation-duration: .5s;
+              animation-direction: reverse;
+            }
+            #loader::after {
+              margin: 8px;
+            }
+            @keyframes l16 { 
+              100%{transform: rotate(1turn)}
+            }
 
-/* 🟠 Boutons */
-.btn-orange {
-    background-color: orange;
-    color: black;
-}
-.btn-orange:hover {
-    background-color: #ff9900;
-}
+            #info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #333;
+            border-radius: 5px;
+            color: white;
+            font-size: 0.9rem;
+            }
 
-/* 🟠 Navigation active */
-.nav-link.active {
-    background-color: orange !important;
-    color: black !important;
-}
-
-
-
-
-/* 🎭 Conteneur Gyroscope */
-.gyro-container {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    align-items: center;
-}
-
-/* 🎯 Affichage des informations du gyroscope */
-.gyro-info .info-item {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-.gyro-info .label {
-    color: orange;
-}
-
-/* 🟠 Petit cercle indicateur */
-.color-circle {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: orange;
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-}
-
-/* 🔄 Animation du loader */
-#loader {
-    width: 50px;
-    margin: auto;
-    aspect-ratio: 1;
-    display: grid;
-    border: 4px solid #0000;
-    border-radius: 50%;
-    border-color: #ccc #0000;
-    animation: l16 1s infinite linear;
-}
-#loader::before,
-#loader::after {    
-    content: "";
-    grid-area: 1/1;
-    margin: 2px;
-    border: inherit;
-    border-radius: 50%;
-}
-#loader::before {
-    border-color: #f03355 #0000;
-    animation: inherit; 
-    animation-duration: .5s;
-    animation-direction: reverse;
-}
-#loader::after {
-    margin: 8px;
-}
-@keyframes l16 { 
-    100% { transform: rotate(1turn) }
-}
-
-/* 📌 Conteneur d'informations */
-#info {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #333;
-    border-radius: 5px;
-    color: white;
-    font-size: 0.9rem;
-}
-
-/* 🛰️ Conteneur SVG */
-#svg-container {
-    position: relative;
-}
-#svg-container::before,
-#svg-container::after {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 4px;
-    background-color: transparent;
-    left: 0;
-    transition: background-color 0.25s;
-}
-#svg-container::before {
-    top: 0;
-}
-#svg-container::after {
-    bottom: 0;
-}
-#svg-container.blink-top-bottom::before,
-#svg-container.blink-top-bottom::after {
-    background-color: red;
-}
-#svg-container.blink-left,
-#svg-container.blink-right {
-    content: '';
-    position: absolute;
-    width: 4px;
-    height: 100%;
-    background-color: transparent;
-    top: 0;
-    transition: background-color 0.25s;
-}
-#svg-container.blink-left {
-    left: 0;
-}
-#svg-container.blink-right {
-    right: 0;
-}
-#svg-container.blink-left {
-    background-color: red;
-}
-#svg-container.blink-right {
-    background-color: red;
-}
+            #svg-container {
+                position: relative;
+            }
+            #svg-container::before,
+            #svg-container::after {
+                content: '';
+                position: absolute;
+                width: 100%;
+                height: 4px;
+                background-color: transparent;
+                left: 0;
+                transition: background-color 0.25s;
+            }
+            #svg-container::before {
+                top: 0;
+            }
+            #svg-container::after {
+                bottom: 0;
+            }
+            #svg-container.blink-top-bottom::before,
+            #svg-container.blink-top-bottom::after {
+                background-color: red;
+            }
+            #svg-container.blink-left,
+            #svg-container.blink-right {
+                content: '';
+                position: absolute;
+                width: 4px;
+                height: 100%;
+                background-color: transparent;
+                top: 0;
+                transition: background-color 0.25s;
+            }
+            #svg-container.blink-left {
+                left: 0;
+            }
+            #svg-container.blink-right {
+                right: 0;
+            }
+            #svg-container.blink-left {
+                background-color: red;
+            }
+            #svg-container.blink-right {
+                background-color: red;
+            }
+            .gauge-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+        }
+         .gauge-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-top: 20px;
+            gap: 15px;
+        }
+        .gauge-box {
+            border: 2px solid white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .gauge {
+            width: 30px;
+            height: 200px; /* Fixed height of gauges */
+            background-color: #444;
+            border-radius: 5px;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        .gauge .fill-positive {
+            position: absolute;
+            bottom: 100px; /* Correspond to zero */
+            height: 0;
+            width: 100%;
+            background-color: orange;
+            transition: height 0.3s ease;
+        }
+        .gauge .fill-negative {
+            position: absolute;
+            top: 100px; /* Correspond to zero */
+            height: 0;
+            width: 100%;
+            background-color: orange;
+            transition: height 0.3s ease;
+        }
+        .gauge .zero-line {
+            position: absolute;
+            top: 50%;
+            left: -10%;
+            width: 120%;
+            height: 2px;
+            background-color: white;
+            transform: translateY(-1px);
+            z-index: 1;
+        }
+        .gauge-value {
+            margin-top: 5px;
+            color: orange;
+            font-weight: bold;
+        }
