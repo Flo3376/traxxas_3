@@ -14,9 +14,7 @@ const GaugeManager = (function () {
 
             gaugeBox.innerHTML = `
                 <div class="gauge" id="gauge-${servo.name}">
-                    <div class="fill-positive" id="fill-positive-${servo.name}"></div>
-                    <div class="fill-negative" id="fill-negative-${servo.name}"></div>
-                    <div class="zero-line"></div>
+                    <div class="fill" id="fill-${servo.name}"></div>
                 </div>
                 <div class="gauge-value" id="value-${servo.name}">0</div>
                 <div>${servo.name}</div>
@@ -32,33 +30,23 @@ const GaugeManager = (function () {
     function updateGauges(servoData) {
         servoData.forEach(servo => {
             const valueElement = document.getElementById(`value-${servo.name}`);
-            const fillPositive = document.getElementById(`fill-positive-${servo.name}`);
-            const fillNegative = document.getElementById(`fill-negative-${servo.name}`);
+            const fillElement = document.getElementById(`fill-${servo.name}`);
 
-            if (valueElement && fillPositive && fillNegative) {
-                let displayValue = servo.value; // Par défaut, la valeur brute
+            if (valueElement && fillElement) {
+                let displayValue = servo.value; // Valeur brute
 
                 // Gestion spéciale pour "throttle" et "brake"
                 if (servo.name.toLowerCase() === "throttle") {
-                    displayValue = Math.max(0, servo.value); // Ne prend que les valeurs positives
+                    displayValue = Math.max(0, servo.value); // Garde uniquement la partie positive
                 } else if (servo.name.toLowerCase() === "brake") {
-                    displayValue = Math.min(0, servo.value); // Ne prend que les valeurs négatives
+                    displayValue = Math.abs(Math.min(0, servo.value)); // Garde uniquement la partie négative, mais l'affiche en positif
                 }
 
-                // Normalisation de -100 à 100 (même pour brake qui est négatif)
-                const normalizedValue = Math.abs(displayValue); 
+                valueElement.textContent = displayValue; // Affichage numérique
 
-                valueElement.textContent = normalizedValue; // Affichage toujours positif
-
-                if (displayValue > 0) {
-                    fillPositive.style.height = `${normalizedValue}px`;
-                    fillPositive.style.bottom = "100px";
-                    fillNegative.style.height = "0";
-                } else {
-                    fillNegative.style.height = `${normalizedValue}px`;
-                    fillNegative.style.top = "100px";
-                    fillPositive.style.height = "0";
-                }
+                // Hauteur proportionnelle (100% = 100px)
+                const height = (displayValue / 100) * 100;
+                fillElement.style.height = `${height}px`; 
             }
         });
     }
