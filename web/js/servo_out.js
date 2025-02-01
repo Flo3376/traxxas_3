@@ -1,8 +1,10 @@
 const ServoOutManager = (function () {
     let initialized = false;
+    let ws = null; // WebSocket local
 
-    function initializeServoOut(servos) {
+    function initializeServoOut(servos, webSocket) {
         if (initialized) return;
+        ws = webSocket; // Stocker l'instance WebSocket
 
         const container = document.getElementById("servo-out-controls");
         container.innerHTML = ""; // Nettoyage

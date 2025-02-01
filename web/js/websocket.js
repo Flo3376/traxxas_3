@@ -126,7 +126,7 @@ const WebSocketManager = (function () {
                     }
                     else if (activeTab === "servo_out") {
                         if (!ServoOutManager.initialized) {
-                            ServoOutManager.initializeServoOut(data.out_servo);
+                            ServoOutManager.initializeServoOut(data.out_servo, ws); // Passer le WebSocket ici
                         }
                         ServoOutManager.updateServoOutValues(data.out_servo);
                     }
