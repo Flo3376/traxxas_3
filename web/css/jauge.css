@@ -1,11 +1,13 @@
 /* Conteneur principal pour toutes les jauges */
 #gauge-container {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    display: flex; /* Aligne les jauges horizontalement */
+    justify-content: center; /* Centre les jauges dans la page */
+    align-items: flex-start; /* Alignement vertical */
+    gap: 20px; /* Espacement entre les jauges */
+    flex-wrap: wrap; /* Permet de passer à la ligne si nécessaire */
     margin: 20px auto;
-    width: 80%; /* Ajuste la largeur globale */
+    width: 90%; /* Ajuste la largeur globale pour éviter le débordement */
+    overflow: hidden; /* Empêche les éléments de dépasser */
 }
 
 /* Conteneur individuel pour chaque jauge */
@@ -17,18 +19,18 @@
     background-color: #333; /* Fond sombre */
     border: 2px solid white; /* Bordure blanche */
     border-radius: 10px; /* Coins arrondis */
-    padding: 20px; /* Espacement interne */
-    margin: 10px 0; /* Espacement externe entre les jauges */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre */
-    width: 300px; /* Largeur fixe pour toutes les jauges */
+    padding: 10px; /* Espacement interne réduit */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre douce */
+    width: 180px; /* Largeur fixe pour chaque jauge */
+    height: 240px; /* Hauteur fixe pour cadrer les jauges */
+    overflow: hidden; /* Empêche les débordements internes */
 }
 
 /* Canvas de la jauge */
 .gauge-box canvas {
     display: block;
-    margin: 0 auto;
-    width: 100%;
-    height: auto;
+    max-width: 100%; /* Ajuste la jauge à la largeur du conteneur */
+    max-height: 100%; /* Empêche les débordements verticaux */
 }
 
 /* Étiquette sous chaque jauge */
@@ -39,9 +41,4 @@
     text-transform: capitalize; /* Capitaliser les noms */
     font-weight: bold;
     text-align: center;
-}
-
-/* Ajout de transition fluide pour les changements de jauge */
-canvas {
-    transition: all 0.3s ease-in-out;
 }
