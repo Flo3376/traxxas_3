@@ -3,7 +3,7 @@ const AmpoulesManager = (function () {
 
     function initializeAmpoules(ampoules) {
         if (initialized) return;
-        
+
         const container = document.getElementById("ampoules-list");
         container.innerHTML = ""; // Nettoyage
 
@@ -22,8 +22,13 @@ const AmpoulesManager = (function () {
                     <span class="titre">Mode:</span> ${ampoule.mode} | 
                     <span class="titre">État:</span> ${ampoule.etat_bas} → ${ampoule.etat_haut}
                 </div>
-                <button class="ampoule-btn" disabled>ON / OFF</button>
+                <button class="ampoule-btn auto" data-state="auto" id="btn-${ampoule.pin}">Auto</button>
             `;
+
+            // Ajoute l'événement pour le bouton ON/OFF/AUTO
+            ampouleBox.querySelector(".ampoule-btn").addEventListener("click", (event) => {
+                toggleAmpouleState(event.target);
+            });
 
             container.appendChild(ampouleBox);
         });
@@ -49,11 +54,40 @@ const AmpoulesManager = (function () {
                     <span class="titre">Mode:</span> ${ampoule.mode} | 
                     <span class="titre">État:</span> ${ampoule.etat_bas} → ${ampoule.etat_haut}
                 </div>
-                <button class="ampoule-btn" disabled>ON / OFF</button>
+                <button class="ampoule-btn auto" data-state="auto" id="btn-${ampoule.pin}">Auto</button>
             `;
+
+            ampouleBox.querySelector(".ampoule-btn").addEventListener("click", (event) => {
+                toggleAmpouleState(event.target);
+            });
 
             container.appendChild(ampouleBox);
         });
+    }
+
+    function toggleAmpouleState(button) {
+        const currentState = button.getAttribute("data-state");
+        let newState;
+
+        // Alterne entre les trois états
+        if (currentState === "auto") {
+            newState = "on";
+            button.classList.remove("auto");
+            button.classList.add("on");
+            button.textContent = "On";
+        } else if (currentState === "on") {
+            newState = "off";
+            button.classList.remove("on");
+            button.classList.add("off");
+            button.textContent = "Off";
+        } else {
+            newState = "auto";
+            button.classList.remove("off");
+            button.classList.add("auto");
+            button.textContent = "Auto";
+        }
+
+        button.setAttribute("data-state", newState);
     }
 
     function getAmpouleClass(ampoule) {

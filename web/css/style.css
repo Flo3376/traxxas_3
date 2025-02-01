@@ -132,71 +132,51 @@ body {
 #svg-container.blink-right {
     background-color: red;
 }
-.ampoule-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Affichage adaptatif */
-    gap: 15px;
-    padding: 20px;
-    background-color: #333;
-    border-radius: 10px;
-    text-align: center;
-}
-
 .ampoule-box {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
     align-items: center;
     background-color: #444;
-    padding: 15px;
-    border-radius: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
     color: white;
-    text-align: center;
+    font-size: 1.2rem;
+    gap: 10px;
 }
-
 .ampoule-name {
     font-weight: bold;
-    font-size: 1.2rem;
-    margin-bottom: 5px;
+    flex: 1;
 }
-
-.ampoule-on {
-    color: yellow;
-    font-size: 2rem;
-}
-
-.ampoule-medium {
-    color: orange !important;
-    font-size: 2rem;
-}
-
-.ampoule-off {
-    color: gray;
-    font-size: 2rem;
-}
-
 .ampoule-info {
+    flex: 3;
     font-size: 0.9rem;
     color: #ccc;
-    margin-top: 5px;
-    text-align: center;
 }
-
-/* Met les titres en orange */
 .ampoule-info span.titre {
     color: orange;
     font-weight: bold;
 }
-
-/* Style du bouton ON/OFF (désactivé pour le moment) */
 .ampoule-btn {
-    margin-top: 10px;
+    flex: 1;
+    text-align: center;
     padding: 5px 10px;
     border: none;
     border-radius: 5px;
-    cursor: not-allowed;
-    background-color: #555;
-    color: white;
     font-size: 0.9rem;
-    width: 100%;
+    cursor: pointer;
 }
+.ampoule-btn.on {
+    background-color: green;
+    color: white;
+}
+.ampoule-btn.off {
+    background-color: red;
+    color: white;
+}
+.ampoule-btn.auto {
+    background-color: gray;
+    color: white;
+}
+
 
