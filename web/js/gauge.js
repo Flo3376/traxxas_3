@@ -39,13 +39,23 @@ const GaugeManager = (function () {
 
             if (!valueElement || !fillPositive) return;
 
-            valueElement.textContent = servo.value;
+            let displayValue = servo.value;
 
-            if (servo.name === "throttle" || servo.name === "brake") {
-                // Jauge 1 sens (0 à 100)
-                fillPositive.style.height = `${servo.value}%`;
-            } else {
-                // Jauge 2 sens (-100 à 100)
+            if (servo.name === "throttle") {
+                // Si la valeur est négative, on affiche 0 mais on garde le remplissage correct
+                displayValue = Math.max(0, servo.value);
+                valueElement.textContent = displayValue;
+                fillPositive.style.height = `${servo.value}%`; // Pas de changement ici, on garde le bon remplissage
+            } 
+            else if (servo.name === "brake") {
+                // On inverse la valeur et on bloque à 0 si négatif
+                displayValue = Math.max(0, -servo.value);
+                valueElement.textContent = displayValue;
+                fillPositive.style.height = `${displayValue}%`;
+            } 
+            else {
+                // Jauge 2 sens (-100 à 100) (NE PAS TOUCHER)
+                valueElement.textContent = servo.value;
                 if (servo.value >= 0) {
                     fillPositive.style.height = `${servo.value}%`;
                     fillPositive.style.bottom = "100px";
