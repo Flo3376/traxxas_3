@@ -48,22 +48,31 @@ body {
     margin: 0 auto;
 }
 
-/* 🌡️ Remplissage des jauges normales (ex: Steer) */
+/* 🌡️ Remplissage des jauges normales (ex: Steer, Light) */
 .fill {
     position: absolute;
     width: 100%;
-    background-color: limegreen;
     transition: height 0.2s ease-in-out;
 }
 
-/* 🔹 Jauges normales (ex: Steer) - Le zéro est au centre */
-.fill-normal {
-    bottom: 100px; /* Place le zéro au centre */
+/* ✅ Zone positive (au-dessus du zéro) pour les jauges normales */
+.fill-positive {
+    background-color: limegreen;
+    bottom: 100px; /* Point neutre */
+    height: 0;
 }
 
-/* 🔥 Jauges spéciales (Throttle & Brake) - Départ du bas */
-.fill-special {
-    bottom: 0 !important; /* Démarrage à la base */
+/* ✅ Zone négative (en dessous du zéro) pour les jauges normales */
+.fill-negative {
+    background-color: red;
+    bottom: 0;
+    height: 0;
+}
+
+/* 🚀 Throttle et Brake commencent **du bas** */
+.special-gauge .fill-positive,
+.special-gauge .fill-negative {
+    bottom: 0 !important;
 }
 
 /* ⚪ Ligne blanche du zéro (sauf pour Throttle & Brake) */
@@ -89,6 +98,7 @@ body {
     color: orange;
     font-weight: bold;
 }
+
 
 /* 🎭 Conteneur Gyroscope */
 .gyro-container {
