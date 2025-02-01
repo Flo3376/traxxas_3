@@ -165,7 +165,7 @@ body {
 }
 
 .ampoule-medium {
-    color: orange;
+    color: orange !important;
     font-size: 2rem;
 }
 
