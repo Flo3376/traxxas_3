@@ -16,16 +16,16 @@
    <!-- Navigation Tabs -->
     <ul class="nav nav-tabs justify-content-center mb-4" id="nav-tabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="true" onclick="WebSocketManager.sendTabRequest(1)">Vue Globale</button>
+            <button class="nav-link active" id="global-tab" data-bs-toggle="tab" data-bs-target="#global" type="button" role="tab" aria-controls="global" aria-selected="true">Vue Globale</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="gyro-tab" data-bs-toggle="tab" data-bs-target="#gyro" type="button" role="tab" aria-controls="gyro" aria-selected="false" onclick="WebSocketManager.sendTabRequest(2)">Gyroscopes</button>
+            <button class="nav-link" id="gyro-tab" data-bs-toggle="tab" data-bs-target="#gyro" type="button" role="tab" aria-controls="gyro" aria-selected="false">Gyroscopes</button>
+        </li>
+        <li class="nav-item" role="servo">
+            <button class="nav-link" id="sim-tab" data-bs-toggle="tab" data-bs-target="#servo" type="button" role="tab" aria-controls="servo" aria-selected="false" >servo</button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="sim-tab" data-bs-toggle="tab" data-bs-target="#sim" type="button" role="tab" aria-controls="sim" aria-selected="false" onclick="WebSocketManager.sendTabRequest(3)">Simulation</button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="false" onclick="WebSocketManager.sendTabRequest(4)">Forçage</button>
+            <button class="nav-link" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="false">Forçage</button>
         </li>
     </ul>
 
@@ -65,7 +65,7 @@
 
 
         <!-- Simulation -->
-        <div class="tab-pane fade" id="sim" role="tabpanel" aria-labelledby="sim-tab">
+        <div class="tab-pane fade" id="servo" role="tabpanel" aria-labelledby="servo-tab">
             <div class="text-center">
                 <h3>Simulation en cours</h3>
                 <p>Manipulez les éléments de simulation ici.</p>
