@@ -1,48 +1,53 @@
-/* Conteneur principal pour toutes les jauges */
-#gauge-container {
-    display: flex; /* Jauges alignées horizontalement */
-    justify-content: center; /* Centre horizontalement */
-    align-items: center; /* Centre verticalement */
-    gap: 20px; /* Espacement entre les jauges */
-    flex-wrap: wrap; /* Permet de passer à la ligne si nécessaire */
-    margin: 20px auto;
-    padding: 10px;
-    width: 100%; /* Prend toute la largeur disponible */
-}
-
-/* Conteneur individuel pour chaque jauge */
-.gauge-box {
+.gauge-container {
     display: flex;
-    flex-direction: column; /* Étale le canvas et l’étiquette verticalement */
-    align-items: center; /* Centre les éléments */
-    justify-content: center;
-    background-color: #333; /* Fond sombre */
-    border: 2px solid white; /* Bordure blanche */
-    border-radius: 10px; /* Coins arrondis */
-    width: 250px; /* Largeur fixe */
-    height: 300px; /* Hauteur fixe */
-    padding: 10px; /* Espacement interne */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre douce */
-    overflow: hidden; /* Empêche les débordements internes */
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 20px;
+    gap: 15px;
 }
-
-/* Canvas de la jauge */
-.gauge-box canvas {
-    display: block;
-    width: 100%; /* Canvas s’adapte à la largeur de la boîte */
-    height: auto; /* Respecte le ratio du canvas */
-    max-width: 230px; /* Limite la largeur pour éviter les débordements */
-    max-height: 230px; /* Limite la hauteur pour un bon cadrage */
-    box-sizing: border-box; /* Prend en compte les bordures et paddings */
-    margin: auto; /* Centre le canvas */
-}
-
-/* Étiquette sous chaque jauge */
-.gauge-box .gauge-label {
-    margin-top: 10px;
-    font-size: 1.2rem;
-    color: orange;
-    text-transform: capitalize; /* Capitalise les noms */
-    font-weight: bold;
+.gauge-box {
+    border: 2px solid white;
+    padding: 10px;
+    border-radius: 5px;
     text-align: center;
+}
+.gauge {
+    width: 30px;
+    height: 200px; /* Fixed height of gauges */
+    background-color: #444;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+}
+.gauge .fill-positive {
+    position: absolute;
+    bottom: 100px; /* Correspond to zero */
+    height: 0;
+    width: 100%;
+    background-color: orange;
+    transition: height 0.3s ease;
+}
+.gauge .fill-negative {
+    position: absolute;
+    top: 100px; /* Correspond to zero */
+    height: 0;
+    width: 100%;
+    background-color: orange;
+    transition: height 0.3s ease;
+}
+.gauge .zero-line {
+    position: absolute;
+    top: 50%;
+    left: -10%;
+    width: 120%;
+    height: 2px;
+    background-color: white;
+    transform: translateY(-1px);
+    z-index: 1;
+}
+.gauge-value {
+    margin-top: 5px;
+    color: orange;
+    font-weight: bold;
 }
