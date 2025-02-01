@@ -1,57 +1,179 @@
-const GaugeManager = (function () {
-    let initialized = false;
-    let servos = [];
+const WebSocketManager = (function () {
+    let ws = null; // WebSocket actuel
+    let targetIP = ""; // IP de l'ESP détectée
+    const connectionTimeout = 5000; // Timeout pour les connexions
+    const maxScanAttempts = 5; // Nombre d'essais de ping
 
-    function initializeGauges(servoData) {
-        if (initialized) return; // On ne crée les jauges qu'une seule fois
-
-        const gaugeContainer = document.getElementById("servo-gauges");
-        gaugeContainer.innerHTML = ""; // Nettoyage du conteneur
-
-        servos = servoData.map((servo, index) => {
-            const gaugeBox = document.createElement("div");
-            gaugeBox.classList.add("gauge-box");
-
-            gaugeBox.innerHTML = `
-                <div class="gauge" id="gauge-${servo.name}">
-                    <div class="fill-positive" id="fill-positive-${servo.name}"></div>
-                    <div class="fill-negative" id="fill-negative-${servo.name}"></div>
-                    <div class="zero-line"></div>
-                </div>
-                <div class="gauge-value" id="value-${servo.name}">0</div>
-                <div>${servo.name}</div>
-            `;
-
-            gaugeContainer.appendChild(gaugeBox);
-            return servo.name; // Stocke les noms pour les mises à jour futures
-        });
-
-        initialized = true;
+    // Met à jour l'interface utilisateur pour afficher le statut
+    function updateStatus(message) {
+        const status = document.getElementById("status");
+        const loader = document.getElementById("loader");
+        status.textContent = message;
+        loader.style.display = message.includes("Tentative") ? "grid" : "none";
     }
 
-    function updateGauges(servoData) {
-        servoData.forEach(servo => {
-            const valueElement = document.getElementById(`value-${servo.name}`);
-            const fillPositive = document.getElementById(`fill-positive-${servo.name}`);
-            const fillNegative = document.getElementById(`fill-negative-${servo.name}`);
+    // Tente de pinger un serveur à une IP donnée
+    async function pingServer(ip) {
+        const url = `http://${ip}/`;
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 250);
 
-            if (valueElement && fillPositive && fillNegative) {
-                valueElement.textContent = servo.value;
-                if (servo.value >= 0) {
-                    fillPositive.style.height = `${servo.value}px`;
-                    fillPositive.style.bottom = "100px";
-                    fillNegative.style.height = "0";
-                } else {
-                    fillNegative.style.height = `${Math.abs(servo.value)}px`;
-                    fillNegative.style.top = "100px";
-                    fillPositive.style.height = "0";
-                }
+            await fetch(url, { method: 'HEAD', signal: controller.signal, mode: 'no-cors' });
+            clearTimeout(timeoutId);
+            console.log(`Ping réussi pour ${ip}`);
+            return true;
+        } catch (error) {
+            if (error.name === "AbortError") {
+                console.log(`Timeout pour le ping à ${ip}`);
+            } else {
+                console.warn(`Erreur lors du ping à ${ip}`);
             }
+            return false;
+        }
+    }
+
+    // Tente de se connecter à un WebSocket
+    async function tryConnectWebSocket(ip) {
+        const wsURL = `ws://${ip}/ws`;
+        return new Promise((resolve, reject) => {
+            console.log(`Tentative de connexion WebSocket : ${wsURL}`);
+            const testWs = new WebSocket(wsURL);
+            let timeout;
+
+            timeout = setTimeout(() => {
+                console.warn(`Timeout pour la connexion à ${ip}`);
+                testWs.close();
+                reject(new Error(`Timeout pour ${ip}`));
+            }, connectionTimeout);
+
+            testWs.onopen = () => {
+                clearTimeout(timeout);
+                console.log(`WebSocket connecté à ${ip}`);
+                resolve(testWs);
+            };
+
+            testWs.onerror = () => {
+                clearTimeout(timeout);
+                console.warn(`Erreur lors de la connexion à ${ip}`);
+                reject(new Error(`Erreur WebSocket pour ${ip}`));
+            };
+
+            testWs.onclose = () => {
+                clearTimeout(timeout);
+                console.warn(`WebSocket fermé pour ${ip}`);
+                reject(new Error(`Connexion fermée pour ${ip}`));
+            };
         });
     }
 
+    // Scanne les IP pour trouver l'ESP
+    async function scanAndConnect(baseIP = "192.168") {
+        for (let x = 2; x <= 255; x++) {
+            const ip = `${baseIP}.${x}.100`;
+            updateStatus(`Tentative de connexion à ${ip}`);
+
+            try {
+                // Vérifier si l'IP répond au ping
+                const isReachable = await pingServer(ip);
+                if (!isReachable) continue;
+
+                // Tenter de se connecter au WebSocket
+                ws = await tryConnectWebSocket(ip);
+                targetIP = ip;
+
+                console.log(`Connexion WebSocket réussie à ${ip}`);
+                updateStatus(`Connecté à ${ip}`);
+                initializeWebSocketHandlers();
+                return;
+            } catch (error) {
+                console.log(`Erreur pour ${ip}: ${error.message}`);
+            }
+        }
+
+        console.error("Aucune passerelle trouvée.");
+        updateStatus("Aucune passerelle trouvée.");
+    }
+
+    // Initialise les gestionnaires d'événements WebSocket
+    function initializeWebSocketHandlers() {
+        if (!ws) return;
+
+        ws.onmessage = (event) => {
+            try {
+                const data = JSON.parse(event.data);
+                console.log("Message reçu :", data);
+
+                if (data.type === "pong") {
+                    console.log("Pong reçu !");
+                } else if (data.type === "data") {
+                    if (activeTab === "global") {
+                        InfoManager.displayInfo(data.system);
+                    } 
+                    else if (activeTab === "gyro") {
+                        GyroManager.setX(data.gyro.roll);
+                        GyroManager.setY(data.gyro.pitch);
+                        GyroManager.SetOffset_X(data.gyro.offsetX);
+                        GyroManager.SetOffset_Y(data.gyro.offsetY);
+                        GyroManager.Setlimit_g_x(data.gyro.limit_x);
+                        GyroManager.Setlimit_g_y(data.gyro.limit_y);
+                    }
+                    else if (activeTab === "servo_in") {
+                        if (!GaugeManager.initialized) {
+                            GaugeManager.initializeGauges(data.in_servo);
+                        }
+                        GaugeManager.updateGauges(data.in_servo);
+                    }
+                    else if (activeTab === "force") {
+                        updateGauges(data.in_servo);
+                    }
+
+
+
+                }
+                else {
+                    console.warn("Message inconnu ou inattendu :", data);
+                }
+            } catch (error) {
+                console.error("Erreur lors du parsing du message WebSocket :", error);
+            }
+        };
+
+        ws.onclose = () => {
+            updateStatus("WebSocket fermé. Tentative de reconnexion...");
+            console.error("WebSocket fermé. Tentative de reconnexion...");
+            reconnectWebSocket();
+        };
+
+        ws.onerror = (error) => {
+            console.error("Erreur WebSocket :", error);
+            ws.close();
+        };
+    }
+
+    // Fonction pour reconnecter ou relancer un scan
+    function reconnectWebSocket() {
+        console.log("Tentative de reconnexion...");
+        scanAndConnect();
+    }
+
+    function sendTabRequest(tabIndex) {
+        const tabRequest = { type: "mod", mod_req: tabIndex };
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify(tabRequest));
+            console.log("Tab request sent:", tabRequest);
+        } else {
+            console.warn("WebSocket not connected");
+        }
+    }
+
+    // Expose les méthodes publiques
     return {
-        initializeGauges,
-        updateGauges,
+        scanAndConnect,
+        reconnectWebSocket,
+        sendTabRequest,
     };
 })();
+
+// Exportation en tant que module ES6 (si nécessaire)
+//export default WebSocketManager;
