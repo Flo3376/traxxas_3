@@ -125,7 +125,10 @@ const WebSocketManager = (function () {
                         GaugeManager.updateGauges(data.in_servo);
                     }
                     else if (activeTab === "servo_out") {
-                        ServoOutManager.initializeServoOut(data.out_servo);
+                        if (!ServoOutManager.initialized) {
+                            ServoOutManager.initializeServoOut(data.out_servo);
+                        }
+                        ServoOutManager.updateServoOutValues(data.out_servo);
                     }
                     else if (activeTab === "force") {
                         updateGauges(data.in_servo);
