@@ -118,6 +118,12 @@ const WebSocketManager = (function () {
                         GyroManager.Setlimit_g_x(data.gyro.limit_x);
                         GyroManager.Setlimit_g_y(data.gyro.limit_y);
                     }
+                    else if (activeTab === "servo_in") {
+                        if (!GaugeManager.initialized) {
+                            GaugeManager.initializeGauges(data.in_servo);
+                        }
+                        GaugeManager.updateGauges(data.in_servo);
+                    }
                     else if (activeTab === "force") {
                         updateGauges(data.in_servo);
                     }

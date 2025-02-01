@@ -1,36 +1,57 @@
-// Gestion des jauges dans gauge.js
+const GaugeManager = (function () {
+    let initialized = false;
+    let servos = [];
 
-// Initialisation des éléments HTML des jauges
-const gaugesPositive = Array.from({ length: 6 }, (_, i) =>
-    document.getElementById(`fill-positive${i + 1}`)
-);
+    function initializeGauges(servoData) {
+        if (initialized) return; // On ne crée les jauges qu'une seule fois
 
-const gaugesNegative = Array.from({ length: 6 }, (_, i) =>
-    document.getElementById(`fill-negative${i + 1}`)
-);
+        const gaugeContainer = document.getElementById("servo-gauges");
+        gaugeContainer.innerHTML = ""; // Nettoyage du conteneur
 
-const gaugeValues = Array.from({ length: 6 }, (_, i) =>
-    document.getElementById(`value${i + 1}`)
-);
+        servos = servoData.map((servo, index) => {
+            const gaugeBox = document.createElement("div");
+            gaugeBox.classList.add("gauge-box");
 
-// Fonction pour mettre à jour les jauges avec de nouvelles données
-function updateGauges(data) {
-    for (let i = 1; i <= 6; i++) {
-        const channelValue = data[`Ch${i}`];
-        if (channelValue !== undefined) {
-            gaugeValues[i - 1].textContent = channelValue;
-            if (channelValue >= 0) {
-                gaugesPositive[i - 1].style.height = `${channelValue}px`;
-                gaugesPositive[i - 1].style.bottom = "100px"; // Position à partir de 0
-                gaugesNegative[i - 1].style.height = "0";
-            } else {
-                gaugesNegative[i - 1].style.height = `${Math.abs(channelValue)}px`;
-                gaugesNegative[i - 1].style.top = "100px"; // Position à partir de 0
-                gaugesPositive[i - 1].style.height = "0";
-            }
-        }
+            gaugeBox.innerHTML = `
+                <div class="gauge" id="gauge-${servo.name}">
+                    <div class="fill-positive" id="fill-positive-${servo.name}"></div>
+                    <div class="fill-negative" id="fill-negative-${servo.name}"></div>
+                    <div class="zero-line"></div>
+                </div>
+                <div class="gauge-value" id="value-${servo.name}">0</div>
+                <div>${servo.name}</div>
+            `;
+
+            gaugeContainer.appendChild(gaugeBox);
+            return servo.name; // Stocke les noms pour les mises à jour futures
+        });
+
+        initialized = true;
     }
-}
 
-// Export de la fonction si vous utilisez un module ES6
-//export { updateGauges };
+    function updateGauges(servoData) {
+        servoData.forEach(servo => {
+            const valueElement = document.getElementById(`value-${servo.name}`);
+            const fillPositive = document.getElementById(`fill-positive-${servo.name}`);
+            const fillNegative = document.getElementById(`fill-negative-${servo.name}`);
+
+            if (valueElement && fillPositive && fillNegative) {
+                valueElement.textContent = servo.value;
+                if (servo.value >= 0) {
+                    fillPositive.style.height = `${servo.value}px`;
+                    fillPositive.style.bottom = "100px";
+                    fillNegative.style.height = "0";
+                } else {
+                    fillNegative.style.height = `${Math.abs(servo.value)}px`;
+                    fillNegative.style.top = "100px";
+                    fillPositive.style.height = "0";
+                }
+            }
+        });
+    }
+
+    return {
+        initializeGauges,
+        updateGauges,
+    };
+})();

@@ -21,8 +21,8 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="gyro-tab" data-bs-toggle="tab" data-bs-target="#gyro" type="button" role="tab" aria-controls="gyro" aria-selected="false">Gyroscopes</button>
         </li>
-        <li class="nav-item" role="servo">
-            <button class="nav-link" id="sim-tab" data-bs-toggle="tab" data-bs-target="#servo" type="button" role="tab" aria-controls="servo" aria-selected="false" >servo</button>
+        <li class="nav-item" role="servo_in">
+            <button class="nav-link" id="servo_in-tab" data-bs-toggle="tab" data-bs-target="#servo_in" type="button" role="tab" aria-controls="servo_in" aria-selected="false" >servo_in</button>
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="force-tab" data-bs-toggle="tab" data-bs-target="#force" type="button" role="tab" aria-controls="force" aria-selected="false">Forçage</button>
@@ -64,11 +64,10 @@
         </div>
 
 
-        <!-- Simulation -->
-        <div class="tab-pane fade" id="servo" role="tabpanel" aria-labelledby="servo-tab">
-            <div class="text-center">
-                <h3>Simulation en cours</h3>
-                <p>Manipulez les éléments de simulation ici.</p>
+        <!-- Servo_in -->
+        <div class="tab-pane fade" id="servo_in" role="tabpanel" aria-labelledby="servo_in-tab">
+            <div class="gauge-container" id="servo-gauges">
+                <!-- Les jauges seront générées ici -->
             </div>
         </div>
 
@@ -90,62 +89,7 @@
                 <p class="text-center">Valeur : <span id="output-value">0</span></p>
                 <button id="release-button" class="btn btn-orange w-100">Release</button>
             </div>
-            <div class="gauge-container">
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge1">
-                        <div class="fill-positive" id="fill-positive1"></div>
-                        <div class="fill-negative" id="fill-negative1"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value1">0</div>
-                    <div>Channel 1</div>
-                </div>
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge2">
-                        <div class="fill-positive" id="fill-positive2"></div>
-                        <div class="fill-negative" id="fill-negative2"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value2">0</div>
-                    <div>Channel 2</div>
-                </div>
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge3">
-                        <div class="fill-positive" id="fill-positive3"></div>
-                        <div class="fill-negative" id="fill-negative3"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value3">0</div>
-                    <div>Channel 3</div>
-                </div>
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge4">
-                        <div class="fill-positive" id="fill-positive4"></div>
-                        <div class="fill-negative" id="fill-negative4"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value4">0</div>
-                    <div>Channel 4</div>
-                </div>
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge5">
-                        <div class="fill-positive" id="fill-positive5"></div>
-                        <div class="fill-negative" id="fill-negative5"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value5">0</div>
-                    <div>Channel 5</div>
-                </div>
-                <div class="gauge-box">
-                    <div class="gauge" id="gauge6">
-                        <div class="fill-positive" id="fill-positive6"></div>
-                        <div class="fill-negative" id="fill-negative6"></div>
-                        <div class="zero-line"></div>
-                    </div>
-                    <div class="gauge-value" id="value6">0</div>
-                    <div>Channel 6</div>
-                </div>
-            </div>
+            
         </div>
         </div>
     </div>
