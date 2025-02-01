@@ -8,7 +8,7 @@ const GaugeManager = (function () {
         const gaugeContainer = document.getElementById("servo-gauges");
         gaugeContainer.innerHTML = ""; // Nettoyage du conteneur
 
-        servos = servoData.map((servo, index) => {
+        servos = servoData.map((servo) => {
             const gaugeBox = document.createElement("div");
             gaugeBox.classList.add("gauge-box");
 
@@ -36,13 +36,26 @@ const GaugeManager = (function () {
             const fillNegative = document.getElementById(`fill-negative-${servo.name}`);
 
             if (valueElement && fillPositive && fillNegative) {
-                valueElement.textContent = servo.value;
-                if (servo.value >= 0) {
-                    fillPositive.style.height = `${servo.value}px`;
+                let displayValue = servo.value; // Par défaut, la valeur brute
+
+                // Gestion spéciale pour "throttle" et "brake"
+                if (servo.name.toLowerCase() === "throttle") {
+                    displayValue = Math.max(0, servo.value); // Ne prend que les valeurs positives
+                } else if (servo.name.toLowerCase() === "brake") {
+                    displayValue = Math.min(0, servo.value); // Ne prend que les valeurs négatives
+                }
+
+                // Normalisation de -100 à 100 (même pour brake qui est négatif)
+                const normalizedValue = Math.abs(displayValue); 
+
+                valueElement.textContent = normalizedValue; // Affichage toujours positif
+
+                if (displayValue > 0) {
+                    fillPositive.style.height = `${normalizedValue}px`;
                     fillPositive.style.bottom = "100px";
                     fillNegative.style.height = "0";
                 } else {
-                    fillNegative.style.height = `${Math.abs(servo.value)}px`;
+                    fillNegative.style.height = `${normalizedValue}px`;
                     fillNegative.style.top = "100px";
                     fillPositive.style.height = "0";
                 }
