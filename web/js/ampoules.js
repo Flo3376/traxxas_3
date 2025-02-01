@@ -11,13 +11,12 @@ const AmpoulesManager = (function () {
             const ampouleBox = document.createElement("div");
             ampouleBox.classList.add("ampoule-box");
 
-            // Vérification si actif ou inactif
-            const isActive = ampoule.actif ? "Actif" : "Inactif";
-            const activeClass = ampoule.actif ? "active" : "inactive";
+            // Définir l'icône d'ampoule (jaune si actif, grise si inactif)
+            const iconClass = ampoule.actif ? "fas fa-lightbulb ampoule-on" : "fas fa-lightbulb ampoule-off";
 
             ampouleBox.innerHTML = `
                 <div class="ampoule-name">${ampoule.name}</div>
-                <div class="ampoule-status ${activeClass}">${isActive}</div>
+                <i class="${iconClass}"></i>
                 <div class="ampoule-info">
                     <span>Pin: ${ampoule.pin}</span> | 
                     <span>Mode: ${ampoule.mode}</span> | 
@@ -39,12 +38,11 @@ const AmpoulesManager = (function () {
             const ampouleBox = document.createElement("div");
             ampouleBox.classList.add("ampoule-box");
 
-            const isActive = ampoule.actif ? "Actif" : "Inactif";
-            const activeClass = ampoule.actif ? "active" : "inactive";
+            const iconClass = ampoule.actif ? "fas fa-lightbulb ampoule-on" : "fas fa-lightbulb ampoule-off";
 
             ampouleBox.innerHTML = `
                 <div class="ampoule-name">${ampoule.name}</div>
-                <div class="ampoule-status ${activeClass}">${isActive}</div>
+                <i class="${iconClass}"></i>
                 <div class="ampoule-info">
                     <span>Pin: ${ampoule.pin}</span> | 
                     <span>Mode: ${ampoule.mode}</span> | 
