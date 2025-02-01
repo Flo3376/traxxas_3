@@ -75,3 +75,18 @@
     color: orange;
     font-weight: bold;
 }
+.servo-out-container {
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    text-align: center;
+}
+.servo-slider {
+    width: 80%;
+    margin: 10px auto;
+}
+.servo-label {
+    font-weight: bold;
+    color: orange;
+    margin-bottom: 5px;
+}
