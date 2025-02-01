@@ -132,3 +132,32 @@ body {
 #svg-container.blink-right {
     background-color: red;
 }
+.ampoules-container {
+    padding: 20px;
+    background-color: #333;
+    border-radius: 10px;
+    text-align: center;
+}
+.ampoule-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #444;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    color: white;
+}
+.ampoule-name {
+    font-weight: bold;
+}
+.ampoule-status.active {
+    color: green;
+}
+.ampoule-status.inactive {
+    color: red;
+}
+.ampoule-info {
+    font-size: 0.9rem;
+    color: #ccc;
+}

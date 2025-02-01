@@ -130,6 +130,12 @@ const WebSocketManager = (function () {
                         }
                         ServoOutManager.updateServoOutValues(data.out_servo);
                     }
+                    else if (activeTab === "ampoules") {
+                        if (!AmpoulesManager.initialized) {
+                            AmpoulesManager.initializeAmpoules(data.ampoules);
+                        }
+                        AmpoulesManager.updateAmpoules(data.ampoules);
+                    }
                     else if (activeTab === "force") {
                         updateGauges(data.in_servo);
                     }
