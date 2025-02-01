@@ -12,13 +12,13 @@ const GaugeManager = (function () {
             const gaugeBox = document.createElement("div");
             gaugeBox.classList.add("gauge-box");
 
-            // Vérifier si c'est une jauge spéciale (throttle ou brake)
+            // Vérifie si c'est une jauge spéciale (Throttle ou Brake)
             const isSpecialGauge = ["throttle", "brake"].includes(servo.name.toLowerCase());
 
             gaugeBox.innerHTML = `
                 <div class="gauge ${isSpecialGauge ? 'special-gauge' : ''}" id="gauge-${servo.name}">
-                    <div class="fill" id="fill-${servo.name}"></div>
-                    ${isSpecialGauge ? '' : '<div class="zero-line"></div>'} <!-- Garde la ligne blanche pour les autres -->
+                    <div class="fill ${isSpecialGauge ? 'fill-special' : 'fill-normal'}" id="fill-${servo.name}"></div>
+                    ${isSpecialGauge ? '' : '<div class="zero-line"></div>'} <!-- Garde le zéro sauf pour Throttle & Brake -->
                 </div>
                 <div class="gauge-value" id="value-${servo.name}">0</div>
                 <div>${servo.name}</div>
@@ -38,24 +38,25 @@ const GaugeManager = (function () {
             const gaugeElement = document.getElementById(`gauge-${servo.name}`);
 
             if (valueElement && fillElement && gaugeElement) {
-                let displayValue = servo.value; // Valeur brute
-                let height = 0; // Hauteur de remplissage
+                let displayValue = servo.value;
+                let height = 0;
 
                 if (servo.name.toLowerCase() === "throttle") {
-                    displayValue = Math.max(0, servo.value); // Ignore négatif
+                    displayValue = Math.max(0, servo.value); // Ignore les valeurs négatives
                     height = (displayValue / 100) * 200; // x2 pour occuper toute la jauge
+                    fillElement.style.bottom = "0"; // Throttle commence du bas
                 } 
                 else if (servo.name.toLowerCase() === "brake") {
-                    displayValue = Math.abs(Math.min(0, servo.value)); // Ignore positif, affiche positif
+                    displayValue = Math.abs(Math.min(0, servo.value)); // Ignore les valeurs positives
                     height = (displayValue / 100) * 200; // x2 pour occuper toute la jauge
+                    fillElement.style.bottom = "0"; // Brake commence du bas
                 } 
                 else {
-                    height = (Math.abs(displayValue) / 100) * 100; // Normal pour les autres
-
+                    height = (Math.abs(displayValue) / 100) * 100; // Jauges normales
                     if (displayValue >= 0) {
-                        fillElement.style.bottom = "100px"; // Monte normalement
+                        fillElement.style.bottom = "100px"; // Les valeurs positives montent
                     } else {
-                        fillElement.style.bottom = `${100 - height}px`; // Descend en négatif
+                        fillElement.style.bottom = `${100 - height}px`; // Les valeurs négatives descendent
                     }
                 }
 
