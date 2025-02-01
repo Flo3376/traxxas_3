@@ -3,39 +3,43 @@ const ServoOutManager = (function () {
 
     function initializeServoOut(servos) {
         if (initialized) return;
-        
+
         const container = document.getElementById("servo-out-controls");
         container.innerHTML = ""; // Nettoyage
 
-        Object.keys(servos).forEach(servo => {
+        servos.forEach(servo => {
             const controlBox = document.createElement("div");
             controlBox.classList.add("servo-box");
 
             controlBox.innerHTML = `
-                <div class="servo-label">${servo.toUpperCase()}</div>
-                <input type="range" min="-100" max="100" value="${servos[servo]}" id="slider-${servo}" class="servo-slider">
-                <div class="servo-value" id="value-${servo}">${servos[servo]}</div>
+                <div class="servo-label">Servo Pin ${servo.pin}</div>
+                <input type="range" min="-100" max="100" value="${servo.position}" id="slider-${servo.pin}" class="servo-slider">
+                <div class="servo-value" id="value-${servo.pin}">${servo.position}</div>
             `;
 
             container.appendChild(controlBox);
 
             // Écouteur pour mise à jour en temps réel
-            document.getElementById(`slider-${servo}`).addEventListener("input", (event) => {
+            document.getElementById(`slider-${servo.pin}`).addEventListener("input", (event) => {
                 const newValue = event.target.value;
-                document.getElementById(`value-${servo}`).textContent = newValue;
-                sendServoOutUpdate(servo, newValue);
+                document.getElementById(`value-${servo.pin}`).textContent = newValue;
+                sendServoOutUpdate(servo.pin, newValue);
             });
         });
 
         initialized = true;
     }
 
-    function sendServoOutUpdate(servo, value) {
+    function sendServoOutUpdate(pin, position) {
         if (ws && ws.readyState === WebSocket.OPEN) {
             const message = {
-                type: "out_servo",
-                servo: servo,
-                value: parseInt(value)
+                type: "servo",
+                out_servo: [
+                    {
+                        pin: pin,
+                        position: parseInt(position)
+                    }
+                ]
             };
             ws.send(JSON.stringify(message));
             console.log("Commande Servo Out envoyée :", message);
@@ -43,12 +47,12 @@ const ServoOutManager = (function () {
     }
 
     function updateServoOutValues(servos) {
-        Object.keys(servos).forEach(servo => {
-            const slider = document.getElementById(`slider-${servo}`);
-            const valueDisplay = document.getElementById(`value-${servo}`);
+        servos.forEach(servo => {
+            const slider = document.getElementById(`slider-${servo.pin}`);
+            const valueDisplay = document.getElementById(`value-${servo.pin}`);
             if (slider && valueDisplay) {
-                slider.value = servos[servo];
-                valueDisplay.textContent = servos[servo];
+                slider.value = servo.position;
+                valueDisplay.textContent = servo.position;
             }
         });
     }

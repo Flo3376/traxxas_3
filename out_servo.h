@@ -13,6 +13,7 @@ public:
     void update();                                      // Mise à jour à appeler régulièrement
     void jumpTo(int targetAngle);                      // Déplacement immédiat
     int getCurrentAngle();                             // Récupérer l'angle actuel
+    int getPin() const;
 
 private:
     // Variables internes

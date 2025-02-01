@@ -17,6 +17,10 @@ void CustomServo::goTo(int targetAngle, unsigned long duration) {
     this->active = true;
 }
 
+int CustomServo::getPin() const {
+    return pin;
+}
+
 // Mise à jour à appeler dans loop()
 void CustomServo::update() {
     if (active) {

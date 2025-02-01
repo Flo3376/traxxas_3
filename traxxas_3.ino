@@ -32,12 +32,14 @@ bool isInMode3 = false;         // Indique si on est activement dans le mode 3
 bool wifiEnabled = true;
 bool use_wifi = false;  // activation ou non du wifi dés de démarrage de l'esp
 
+
 /*=====================================*/
 /*  Déclaration des servos (sorties)   */
 /*=====================================*/
 CustomServo* servo1;
 CustomServo* servo2;
 CustomServo* servo3;
+CustomServo* servos[3];  // Tableau de pointeurs pour stocker les servos
 
 /*=============================*/
 /*  Déclaration des ampoules   */
@@ -116,7 +118,10 @@ void setup() {
   servo1 = new CustomServo(aux_serv_1, 500, 2400, 0);
   servo2 = new CustomServo(aux_serv_2, 500, 2400, 0);
   servo3 = new CustomServo(aux_serv_3, 500, 2400, 0);
-
+  // Une fois les servos initialisés, on peut les stocker dans le tableau
+  servos[0] = servo1;
+  servos[1] = servo2;
+  servos[2] = servo3;
 
   setupGyro();  // Initialisation du gyroscope
 
@@ -280,40 +285,7 @@ void loop() {
 
     /*=====   Alterner entre true et false pour les clignotans en fonctionnement dégradé   =======*/
     blink_degraded = !blink_degraded;
-
-    /*=====   transmition vers le smartphone si le wifi est activé   =======*/
-    /*
-	 Modes de transmission (`transmit_mod`) :
-	  - **Mode 1 (géré ailleurs)** :
-	    - Ce mode s'exécute toutes les 5 secondes (géré dans une autre partie du code).
-	    - Transmet des informations peu importantes, comme un état général ou un message "keep-alive".
-	    
-	  - **Mode 2 : Gyroscope** :
-	    - Envoie régulièrement les données du gyroscope au smartphone.
-	    - Les données comprennent l'angle d'inclinaison, l'accélération ou d'autres paramètres liés à la stabilité.
-
-	  - **Mode 3 : Récepteur radio** :
-	    - Transmet les positions théoriques des commandes demandées par la télécommande.
-	    - Ces données reflètent l'état souhaité des actionneurs (ex. servos) tel que défini par l'utilisateur.
-
-	  - **Mode 4 ( partiellement implémenté ou non géré)** :
-	    - Ce mode est prévu pour forcer les sorties dans des états spécifiques, indépendamment des commandes normales.
-	    - Il surcharge le fonctionnement standard du véhicule pour imposer un contrôle manuel ou des tests.
-	*/
-    if (use_wifi) {
-      /*if (transmit_mod == 2) {
-        // Envoie les données du gyroscope au smartphone
-        String data_to_send = generateGyroJson();  // Génère les données JSON du gyroscope
-        wifiWebSocket.sendData(data_to_send);      // Envoie via WebSocket
-      }
-      if (transmit_mod == 4) {
-        // Envoie les données des servos au smartphone
-        String jsonData = generateServoJson();  // Génère les données JSON des servos
-        wifiWebSocket.sendData(jsonData);       // Envoie via WebSocket
-      }*/
-    }
   }
-
   /*=====   Toutes les 500 ms   =======*/
   if (currentMillis - last_500_Loop >= Interval_500) {
     last_500_Loop = currentMillis;
@@ -331,24 +303,6 @@ void loop() {
   /*=====   Toutes les 5 s   =======*/
   if (currentMillis - last_5000_Loop >= Interval_5000) {
     last_5000_Loop = currentMillis;
-
-    /*=====   transmition vers le smartphone si le wifi est activé   =======*/
-    /*if (transmit_mod == 1 && use_wifi) {
-
-      JsonDocument doc;
-      doc["type"] = "info";                        // Type de message (info général)
-      doc["name"] = car_name;                      // Nom du véhicule (défini dans config.h)
-      doc["version"] = version_soft;               // Version logicielle
-      doc["localip"] = WiFi.localIP().toString();  // Adresse IP locale
-      doc["uptime"] = millis() / 1000;             // Temps de fonctionnement en secondes
-      doc["ssid"] = WIFI_SSID;                     // Nom du réseau Wi-Fi
-      doc["rssi"] = WiFi.RSSI();                   // Puissance du signal Wi-Fi (dBm)
-      doc["output"] = output_u;                    // Nombre de sorties
-      doc["input"] = input_u;                      // Nombre de entrées
-      String jsonString;
-      serializeJson(doc, jsonString);
-      wifiWebSocket.sendData(jsonString);
-    }*/
   }
 
 
@@ -885,9 +839,18 @@ void sendDataToSmartphone() {
 
 
   /*=====   Section servo / sortie =======*/
-  doc["out_servo"]["s1"] = servo1->getCurrentAngle();
-  doc["out_servo"]["s2"] = servo2->getCurrentAngle();
-  doc["out_servo"]["s3"] = servo3->getCurrentAngle();
+  index = 0;
+
+  CustomServo* servos[] = {servo1, servo2, servo3};
+  // Boucle pour ajouter toutes les infos des servos
+for (int i = 0; i < sizeof(servos) / sizeof(servos[0]); i++) {
+    doc["out_servo"][index]["pin"] = servos[i]->getPin();        // 🔥 On ajoute la broche
+    doc["out_servo"][index]["position"] = servos[i]->getCurrentAngle();
+    index++;  
+    }
+  //doc["out_servo"]["s1"] = servo1->getCurrentAngle();
+  //doc["out_servo"]["s2"] = servo2->getCurrentAngle();
+  //doc["out_servo"]["s3"] = servo3->getCurrentAngle();
 
   // Conversion et envoi des données JSON
   String jsonString;
@@ -899,6 +862,7 @@ void sendDataToSmartphone() {
 
 
 void handleMessage() {
+
   // Vérifie si la file d'attente contient un message
   if (messageQueue.empty()) {
 
@@ -979,29 +943,29 @@ void handleMessage() {
       Serial.println("Commande mal formatée.");
     }
 
-  } else if (type == "mod") {
+  } else if (type == "servo") {  // 🔥 Gestion des servos
+    if (!doc["out_servo"].isNull()) {
+      JsonArray servoCommands = doc["out_servo"].as<JsonArray>();
 
-    if (!doc["mod_req"].isNull()) {
-      String mod_req = doc["mod_req"];
-      // Vérifie que mod_req contient uniquement des chiffres
-      bool isNumeric = true;
-      for (int i = 0; i < mod_req.length(); i++) {
-        if (!isdigit(mod_req[i])) {
-          isNumeric = false;
-          break;
+      for (JsonObject servoData : servoCommands) {
+        int pin = servoData["pin"];
+        int position = servoData["position"];
+
+        // Trouver le servo correspondant et mettre à jour sa position
+        for (int i = 0; i < 3; i++) {  // 3 servos à parcourir
+          if (servos[i] != nullptr && servos[i]->getPin() == pin) {
+            servos[i]->goTo(position, 500);  // Déplacement en 500ms
+            Serial.print("Mise à jour Servo Pin ");
+            Serial.print(pin);
+            Serial.print(" -> Position ");
+            Serial.println(position);
+            break;
+          }
         }
       }
-
-      if (isNumeric) {
-        transmit_mod = mod_req.toInt();                                  // Convertir String en int avant assignation
-        Serial.println("Mod reçu et valide : " + String(transmit_mod));  // Conversion explicite en String pour l'affichage
-      } else {
-        Serial.println("Erreur : 'mod' contient des caractères non numériques !");
-      }
     } else {
-      Serial.println("Clé 'mod_req' manquante !");
+      Serial.println("Commande 'servo' mal formatée !");
     }
-
   } else {
     Serial.println("Type de message non reconnu : " + type);
   }
