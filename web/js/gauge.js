@@ -57,10 +57,12 @@ const GaugeManager = (function () {
                 height = (Math.abs(displayValue) / 100) * 100;
 
                 if (displayValue >= 0) {
-                    fillPositive.style.height = `${height}px`;
+                    fillPositive.style.height = `${height}px`; // Monte vers le haut
+                    fillPositive.style.bottom = "100px";
                     fillNegative.style.height = "0";
                 } else {
-                    fillNegative.style.height = `${height}px`;
+                    fillNegative.style.height = `${height}px`; // Descend vers le bas
+                    fillNegative.style.bottom = "0";
                     fillPositive.style.height = "0";
                 }
             }
