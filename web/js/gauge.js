@@ -12,8 +12,11 @@ const GaugeManager = (function () {
             const gaugeBox = document.createElement("div");
             gaugeBox.classList.add("gauge-box");
 
+            // Vérifier si c'est une jauge spéciale (throttle ou brake)
+            const isSpecialGauge = ["throttle", "brake"].includes(servo.name.toLowerCase());
+
             gaugeBox.innerHTML = `
-                <div class="gauge" id="gauge-${servo.name}">
+                <div class="gauge ${isSpecialGauge ? 'special-gauge' : ''}" id="gauge-${servo.name}">
                     <div class="fill" id="fill-${servo.name}"></div>
                 </div>
                 <div class="gauge-value" id="value-${servo.name}">0</div>
@@ -31,22 +34,31 @@ const GaugeManager = (function () {
         servoData.forEach(servo => {
             const valueElement = document.getElementById(`value-${servo.name}`);
             const fillElement = document.getElementById(`fill-${servo.name}`);
+            const gaugeElement = document.getElementById(`gauge-${servo.name}`);
 
-            if (valueElement && fillElement) {
+            if (valueElement && fillElement && gaugeElement) {
                 let displayValue = servo.value; // Valeur brute
+                let height = 0; // Hauteur de remplissage
 
-                // Gestion spéciale pour "throttle" et "brake"
                 if (servo.name.toLowerCase() === "throttle") {
-                    displayValue = Math.max(0, servo.value); // Garde uniquement la partie positive
-                } else if (servo.name.toLowerCase() === "brake") {
-                    displayValue = Math.abs(Math.min(0, servo.value)); // Garde uniquement la partie négative, mais l'affiche en positif
+                    displayValue = Math.max(0, servo.value); // Ignore négatif
+                    height = (displayValue / 100) * 200; // x2 pour occuper toute la jauge
+                } 
+                else if (servo.name.toLowerCase() === "brake") {
+                    displayValue = Math.abs(Math.min(0, servo.value)); // Ignore positif, affiche positif
+                    height = (displayValue / 100) * 200; // x2 pour occuper toute la jauge
+                } 
+                else {
+                    height = (Math.abs(displayValue) / 100) * 100; // Normal pour les autres
                 }
 
                 valueElement.textContent = displayValue; // Affichage numérique
-
-                // Hauteur proportionnelle (100% = 100px)
-                const height = (displayValue / 100) * 100;
                 fillElement.style.height = `${height}px`; 
+
+                // Supprimer la ligne blanche du zéro pour Throttle & Brake
+                if (["throttle", "brake"].includes(servo.name.toLowerCase())) {
+                    gaugeElement.classList.add("no-zero-line");
+                }
             }
         });
     }

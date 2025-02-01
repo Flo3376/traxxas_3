@@ -190,3 +190,22 @@ body {
             color: orange;
             font-weight: bold;
         }
+
+        .special-gauge {
+    position: relative;
+    height: 200px; /* Deux fois plus grand pour compensée la suppression du négatif */
+    border: 2px solid #fff; /* Bordure */
+    background-color: #222; /* Fond */
+}
+
+.fill {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background-color: limegreen;
+    transition: height 0.2s ease-in-out;
+}
+
+.no-zero-line .zero-line {
+    display: none !important; /* Supprime la ligne blanche du 0 */
+}
