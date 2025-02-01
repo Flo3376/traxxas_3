@@ -156,6 +156,10 @@ body {
     color: yellow;
     font-size: 1.5rem;
 }
+.ampoule-medium {
+    color: orange; /* État intermédiaire */
+    font-size: 1.5rem;
+}
 .ampoule-off {
     color: gray;
     font-size: 1.5rem;
