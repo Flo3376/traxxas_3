@@ -1,74 +1,47 @@
-/* Conteneur des jauges */
-.gauge-container {
+/* Conteneur principal pour toutes les jauges */
+#gauge-container {
     display: flex;
-    justify-content: space-around;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    margin-top: 20px;
-    gap: 15px;
+    margin: 20px auto;
+    width: 80%; /* Ajuste la largeur globale */
 }
 
-/* Boîte contenant chaque jauge */
+/* Conteneur individuel pour chaque jauge */
 .gauge-box {
-    border: 2px solid white;
-    padding: 10px;
-    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #333; /* Fond sombre */
+    border: 2px solid white; /* Bordure blanche */
+    border-radius: 10px; /* Coins arrondis */
+    padding: 20px; /* Espacement interne */
+    margin: 10px 0; /* Espacement externe entre les jauges */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre */
+    width: 300px; /* Largeur fixe pour toutes les jauges */
+}
+
+/* Canvas de la jauge */
+.gauge-box canvas {
+    display: block;
+    margin: 0 auto;
+    width: 100%;
+    height: auto;
+}
+
+/* Étiquette sous chaque jauge */
+.gauge-box .gauge-label {
+    margin-top: 10px;
+    font-size: 1.2rem;
+    color: orange;
+    text-transform: capitalize; /* Capitaliser les noms */
+    font-weight: bold;
     text-align: center;
 }
 
-/* Base des jauges */
-.gauge {
-    width: 30px;
-    height: 200px;
-    background-color: #444;
-    border-radius: 5px;
-    position: relative;
-    overflow: hidden;
-    margin: 0 auto;
-}
-
-/* Jauges à 1 sens */
-.one-way-gauge .fill {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background-color: limegreen;
-    height: 0;
-    transition: height 0.2s ease-in-out;
-}
-
-/* Jauges à 2 sens */
-.two-way-gauge .fill-positive {
-    position: absolute;
-    bottom: 100px; /* Zéro au centre */
-    width: 100%;
-    background-color: limegreen;
-    height: 0;
-    transition: height 0.2s ease-in-out;
-}
-
-.two-way-gauge .fill-negative {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    background-color: red;
-    height: 0;
-    transition: height 0.2s ease-in-out;
-}
-
-/* Ligne blanche au centre des jauges 2 sens */
-.two-way-gauge .zero-line {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background-color: white;
-    z-index: 1;
-}
-
-/* Valeur affichée sous la jauge */
-.gauge-value {
-    margin-top: 5px;
-    color: orange;
-    font-weight: bold;
+/* Ajout de transition fluide pour les changements de jauge */
+canvas {
+    transition: all 0.3s ease-in-out;
 }
