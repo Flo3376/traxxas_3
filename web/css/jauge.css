@@ -1,13 +1,14 @@
 /* Conteneur principal pour toutes les jauges */
 #gauge-container {
-    display: flex; /* Aligne les jauges horizontalement */
-    justify-content: center; /* Centre les jauges dans la page */
-    align-items: flex-start; /* Alignement vertical */
-    gap: 20px; /* Espacement entre les jauges */
+    display: flex;
+    flex-direction: row;
+    justify-content: center; /* Centre horizontalement */
+    align-items: flex-start; /* Aligne verticalement */
+    gap: 20px; /* Espace entre les jauges */
     flex-wrap: wrap; /* Permet de passer à la ligne si nécessaire */
     margin: 20px auto;
-    width: 90%; /* Ajuste la largeur globale pour éviter le débordement */
-    overflow: hidden; /* Empêche les éléments de dépasser */
+    width: 90%; /* Ajuste la largeur globale */
+    overflow: hidden; /* Empêche les débordements */
 }
 
 /* Conteneur individuel pour chaque jauge */
@@ -19,18 +20,21 @@
     background-color: #333; /* Fond sombre */
     border: 2px solid white; /* Bordure blanche */
     border-radius: 10px; /* Coins arrondis */
-    padding: 10px; /* Espacement interne réduit */
+    padding: 10px; /* Espacement interne */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre douce */
-    width: 180px; /* Largeur fixe pour chaque jauge */
-    height: 240px; /* Hauteur fixe pour cadrer les jauges */
-    overflow: hidden; /* Empêche les débordements internes */
+    width: 200px; /* Ajuste la largeur des conteneurs */
+    height: 240px; /* Ajuste la hauteur des conteneurs */
+    overflow: hidden; /* Empêche les débordements */
 }
 
 /* Canvas de la jauge */
 .gauge-box canvas {
     display: block;
-    max-width: 100%; /* Ajuste la jauge à la largeur du conteneur */
-    max-height: 100%; /* Empêche les débordements verticaux */
+    margin: 0 auto;
+    width: 180px; /* Ajuste la largeur du canvas pour éviter le débordement */
+    height: 100%; /* S’adapte à la hauteur du conteneur */
+    max-width: 100%; /* Empêche les débordements horizontaux */
+    box-sizing: border-box; /* Prend en compte les bordures et paddings */
 }
 
 /* Étiquette sous chaque jauge */
@@ -38,7 +42,7 @@
     margin-top: 10px;
     font-size: 1.2rem;
     color: orange;
-    text-transform: capitalize; /* Capitaliser les noms */
+    text-transform: capitalize; /* Capitalise les noms */
     font-weight: bold;
     text-align: center;
 }
