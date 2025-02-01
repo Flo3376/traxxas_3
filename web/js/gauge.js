@@ -17,7 +17,8 @@ const GaugeManager = (function () {
 
             gaugeBox.innerHTML = `
                 <div class="gauge ${isSpecialGauge ? 'special-gauge' : ''}" id="gauge-${servo.name}">
-                    <div class="fill" id="fill-${servo.name}"></div>
+                    <div class="fill ${isSpecialGauge ? 'fill-special' : 'fill-normal'}" id="fill-${servo.name}"></div>
+                    ${isSpecialGauge ? '' : '<div class="zero-line"></div>'} <!-- Garde la ligne blanche pour les autres -->
                 </div>
                 <div class="gauge-value" id="value-${servo.name}">0</div>
                 <div>${servo.name}</div>
@@ -50,15 +51,11 @@ const GaugeManager = (function () {
                 } 
                 else {
                     height = (Math.abs(displayValue) / 100) * 100; // Normal pour les autres
+                    fillElement.style.bottom = "100px"; // Position du 0 au centre pour les autres
                 }
 
                 valueElement.textContent = displayValue; // Affichage numérique
                 fillElement.style.height = `${height}px`; 
-
-                // Supprimer la ligne blanche du zéro pour Throttle & Brake
-                if (["throttle", "brake"].includes(servo.name.toLowerCase())) {
-                    gaugeElement.classList.add("no-zero-line");
-                }
             }
         });
     }
