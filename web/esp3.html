@@ -9,7 +9,6 @@
     <!-- Font Awesome CDN -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <link rel="stylesheet" href="https://flo3376.github.io/traxxas_3/web/css/style.css">
-<link rel="stylesheet" href="https://flo3376.github.io/traxxas_3/web/css/jauge.css">
 </head>
 <body>
 
@@ -67,7 +66,9 @@
 
         <!-- Servo_in -->
         <div class="tab-pane fade" id="servo_in" role="tabpanel" aria-labelledby="servo_in-tab">
-            <div id="gauge-container"></div>
+            <div class="gauge-container" id="servo-gauges">
+                <!-- Les jauges seront générées ici -->
+            </div>
         </div>
 
         <!-- Forçage -->
@@ -140,10 +141,9 @@
 
 
 <script src="https://flo3376.github.io/traxxas_3/web/js/websocket.js"></script>
-<script src="https://flo3376.github.io/traxxas_3/web/js/gauge.min.js"></script>
+<script src="https://flo3376.github.io/traxxas_3/web/js/gauge.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/info.js"></script>
 <script src="https://flo3376.github.io/traxxas_3/web/js/gyro.js"></script>
-<script src="https://flo3376.github.io/traxxas_3/web/js/jauge.js"></script>
 <script>
      document.addEventListener("DOMContentLoaded", function () {
         const svgContainer = document.getElementById("svg-container");
