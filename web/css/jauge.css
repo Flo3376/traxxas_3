@@ -1,40 +1,40 @@
 /* Conteneur principal pour toutes les jauges */
 #gauge-container {
-    display: flex;
-    flex-direction: row;
+    display: flex; /* Jauges alignées horizontalement */
     justify-content: center; /* Centre horizontalement */
-    align-items: flex-start; /* Aligne verticalement */
-    gap: 20px; /* Espace entre les jauges */
+    align-items: center; /* Centre verticalement */
+    gap: 20px; /* Espacement entre les jauges */
     flex-wrap: wrap; /* Permet de passer à la ligne si nécessaire */
     margin: 20px auto;
-    width: 90%; /* Ajuste la largeur globale */
-    overflow: hidden; /* Empêche les débordements */
+    padding: 10px;
+    width: 100%; /* Prend toute la largeur disponible */
 }
 
 /* Conteneur individuel pour chaque jauge */
 .gauge-box {
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column; /* Étale le canvas et l’étiquette verticalement */
+    align-items: center; /* Centre les éléments */
     justify-content: center;
     background-color: #333; /* Fond sombre */
     border: 2px solid white; /* Bordure blanche */
     border-radius: 10px; /* Coins arrondis */
+    width: 250px; /* Largeur fixe */
+    height: 300px; /* Hauteur fixe */
     padding: 10px; /* Espacement interne */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Ombre douce */
-    width: 200px; /* Ajuste la largeur des conteneurs */
-    height: 240px; /* Ajuste la hauteur des conteneurs */
-    overflow: hidden; /* Empêche les débordements */
+    overflow: hidden; /* Empêche les débordements internes */
 }
 
 /* Canvas de la jauge */
 .gauge-box canvas {
     display: block;
-    margin: 0 auto;
-    width: 180px; /* Ajuste la largeur du canvas pour éviter le débordement */
-    height: 100%; /* S’adapte à la hauteur du conteneur */
-    max-width: 100%; /* Empêche les débordements horizontaux */
+    width: 100%; /* Canvas s’adapte à la largeur de la boîte */
+    height: auto; /* Respecte le ratio du canvas */
+    max-width: 230px; /* Limite la largeur pour éviter les débordements */
+    max-height: 230px; /* Limite la hauteur pour un bon cadrage */
     box-sizing: border-box; /* Prend en compte les bordures et paddings */
+    margin: auto; /* Centre le canvas */
 }
 
 /* Étiquette sous chaque jauge */
