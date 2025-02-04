@@ -290,14 +290,15 @@ void loop() {
   if (currentMillis - last_500_Loop >= Interval_500) {
     last_500_Loop = currentMillis;
     blink = !blink;  // Alterner entre true et false pour les clignotans en fonctionnement normal
+    if (use_wifi) {
+      sendDataToSmartphone();
+    }
   }
 
   /*=====   Toutes les 1 s   =======*/
   if (currentMillis - last_1000_Loop >= Interval_1000) {
     last_1000_Loop = currentMillis;
-    if (use_wifi) {
-      sendDataToSmartphone();
-    }
+    
   }
 
   /*=====   Toutes les 5 s   =======*/
