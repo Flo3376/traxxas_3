@@ -5,9 +5,16 @@
 #include <ESPAsyncWebServer.h>
 #include <queue>
 
+// Variable globale pour activer/désactiver les logs des WebSockets
 extern bool Debug_socket;
 
-extern std::queue<String> messageQueue; // File d’attente pour les messages WebSocket
+// File d'attente pour stocker les messages WebSocket reçus et les traiter en différé
+extern std::queue<String> messageQueue;
+
+/**
+ * Classe WiFiWebSocket
+ * Permet la gestion du Wi-Fi et de la communication via WebSocket
+ */
 class WiFiWebSocket {
 public:
     WiFiWebSocket(const char* ssid, const char* password); // Constructeur
@@ -18,12 +25,12 @@ public:
     void handleMessage(); // Ajoute la méthode pour traiter la file d'attente
 
 private:
-    const char* ssid;
-    const char* password;
-    AsyncWebServer server;
-    AsyncWebSocket ws;
-    bool wifiConnected;
-    static WiFiWebSocket* instance;
+    const char* ssid;       ///< Nom du réseau Wi-Fi
+    const char* password;   ///< Mot de passe du réseau Wi-Fi
+    AsyncWebServer server;  ///< Serveur HTTP asynchrone
+    AsyncWebSocket ws;      ///< Gestion des WebSockets
+    bool wifiConnected;     ///< État de la connexion Wi-Fi
+    static WiFiWebSocket* instance; ///< Pointeur vers l'instance unique de la classe
 
     
 

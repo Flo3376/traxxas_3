@@ -1,41 +1,49 @@
 #include "gyro.h"
-#include <ArduinoJson.h>
+#include "config.h"
 
-// Instance du capteur GY-521
+// Instance du capteur GY-521 (MPU6050)
 Adafruit_MPU6050 mpu;
 
-// Variables globales
+// Définition des variables globales, initialisées avec les valeurs par défaut de config.h
+float gyroOffsetX = DEFAULT_GYRO_OFFSET_X;
+float gyroOffsetY = DEFAULT_GYRO_OFFSET_Y;
+float gyroOffsetZ = DEFAULT_GYRO_OFFSET_Z;
+
+float accelOffsetX = DEFAULT_ACCEL_OFFSET_X;
+float accelOffsetY = DEFAULT_ACCEL_OFFSET_Y;
+float accelOffsetZ = DEFAULT_ACCEL_OFFSET_Z;
+
+// Valeurs par défaut des angles d'inclinaison
+// Ces valeurs sont intentionnellement erronées au démarrage pour éviter les fausses lectures
+// Comme une aiguille de jauge d'essence qui ne bouge que lorsque le contact est mis
+float roll = 5;
+float pitch = 5;
+
+float ax = DEFAULT_AX;
+float ay = DEFAULT_AY;
+float az = DEFAULT_AZ;
+
+int limit_g_x = DEFAULT_LIMIT_G_X;
+int limit_g_y = DEFAULT_LIMIT_G_Y;
+
+int orientation_gyro = DEFAULT_ORIENTATION_GYRO;
+
+// Variable de debug
 bool debug_gyro = false;
-
-float gyroOffsetX = 2.1, gyroOffsetY = 2.7, gyroOffsetZ = 0.0;
-//float gyroOffsetX = -3.3, gyroOffsetY = 6.7, gyroOffsetZ = 0.0;
-float accelOffsetX = 0, accelOffsetY = -0, accelOffsetZ = -9.47;
-float roll = 5.0, pitch = 5.0;
-float ax = -0.66, ay = -0.66, az = 9.41;
-
-int limit_g_x=25;
-int limit_g_y=25;
-
-int orientation_gyro=4;
-
-//unsigned long previousGyroMillis = 0;         // Dernière lecture du gyroscope
-//const unsigned long gyroInterval = 5000;      // Intervalle en millisecondes (2 secondes)
 
 // Initialisation du gyroscope
 void setupGyro() {
-    // Initialisation du bus I2C
     Wire.begin(I2C_SDA, I2C_SCL);
-
     unsigned long startTime = millis();
     bool gyroDetected = false;
 
-    // Tenter de détecter le gyroscope pendant 5 secondes
+    // Tentative de détection du capteur sur 5 secondes
     while (millis() - startTime < 5000) {
         if (mpu.begin()) {
             gyroDetected = true;
             break;
         }
-        delay(500); // Attendre un peu avant de réessayer
+        delay(500);
     }
 
     if (gyroDetected) {
@@ -48,97 +56,74 @@ void setupGyro() {
     }
 }
 
-// Lecture des données du gyroscope
+// Lecture des données du gyroscope et correction en fonction de l'orientation
 void readGyro() {
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    // Lire les données des accélérations
+    // Lecture des accélérations brutes
     float raw_ax = a.acceleration.x;
     float raw_ay = a.acceleration.y;
     float raw_az = a.acceleration.z;
 
-    // Ajuster les axes selon l'orientation du boîtier
+    // Ajustement des axes en fonction de l'orientation du capteur dans le boîtier
     switch (orientation_gyro) {
-        case 1: // 1/4 de tour
+        case 1: // Rotation 90°
             ax = -raw_ay;
             ay = raw_ax;
             az = raw_az;
             break;
-        case 2: // 1/2 tour
+        case 2: // Rotation 180°
             ax = -raw_ax;
             ay = -raw_ay;
             az = raw_az;
             break;
-        case 3: // 3/4 de tour
+        case 3: // Rotation 270°
             ax = raw_ay;
             ay = -raw_ax;
             az = raw_az;
             break;
-        default: // Orientation normale (0 tour)
+        default: // Orientation par défaut
             ax = raw_ax;
             ay = raw_ay;
             az = raw_az;
             break;
     }
 
-    // Calculer roll et pitch en tenant compte des axes ajustés
+    // Calcul des angles Roll et Pitch à partir des accélérations mesurées
     roll = gyroOffsetX + atan2(ay, sqrt(ax * ax + az * az)) * 180 / PI;
     pitch = gyroOffsetY + atan2(-ax, sqrt(ay * ay + az * az)) * 180 / PI;
 
-
+    // Affichage des données si le mode debug est activé
     if (debug_gyro) {
         Serial.println("=== Gyroscope Data ===");
         Serial.print("Orientation: "); Serial.println(orientation_gyro);
-        Serial.print("ax: "); Serial.println(ax);
-        Serial.print("ay: "); Serial.println(ay);
-        Serial.print("az: "); Serial.println(az);
-        Serial.print("Roll: "); Serial.println(roll);
-        Serial.print("Pitch: "); Serial.println(pitch);
-        Serial.print("Limit X: "); Serial.println(limit_g_x);
-        Serial.print("Limit Y: "); Serial.println(limit_g_y);
+        Serial.print("Accélération X: "); Serial.println(ax);
+        Serial.print("Accélération Y: "); Serial.println(ay);
+        Serial.print("Accélération Z: "); Serial.println(az);
+        Serial.print("Angle Roll: "); Serial.println(roll);
+        Serial.print("Angle Pitch: "); Serial.println(pitch);
+        Serial.print("Limite G X: "); Serial.println(limit_g_x);
+        Serial.print("Limite G Y: "); Serial.println(limit_g_y);
     }
 }
 
-// Génération des données JSON
-String generateGyroJson() {
-    JsonDocument doc;
-
-    // Ajouter les valeurs au document JSON
-    doc["type"] = "gyro";
-    doc["Orientation"] = orientation_gyro;
-    doc["roll"] = roll;
-    doc["pitch"] = pitch;
-    doc["Offset_X"] = gyroOffsetX;
-    doc["Offset_Y"] = gyroOffsetY;
-    doc["ay"] = ay;
-    doc["az"] = az;
-    doc["Limit_g_x"] = limit_g_x;
-    doc["Limit_g_y"] = limit_g_y;
-
-    // Convertir le document en une chaîne JSON
-    String jsonString;
-    serializeJson(doc, jsonString);
-    return jsonString;
-}
-
+// Réinitialisation des offsets du gyroscope pour recalibrer les valeurs mesurées
 void resetGyro() {
-    // Lire les données actuelles du gyroscope
     sensors_event_t a, g, temp;
     mpu.getEvent(&a, &g, &temp);
 
-    // Calculer les valeurs actuelles de roll et pitch
+    // Recalcul des valeurs actuelles de roll et pitch comme nouveaux offsets
     float currentRoll = atan2(a.acceleration.y, sqrt(a.acceleration.x * a.acceleration.x + a.acceleration.z * a.acceleration.z)) * 180 / PI;
     float currentPitch = atan2(-a.acceleration.x, sqrt(a.acceleration.y * a.acceleration.y + a.acceleration.z * a.acceleration.z)) * 180 / PI;
 
-    // Définir les offsets basés sur les valeurs actuelles
     gyroOffsetX = currentRoll;
     gyroOffsetY = -currentPitch;
 
-    // Optionnel: Afficher les nouvelles valeurs d'offset pour vérification
+    // Affichage des nouvelles valeurs si le mode debug est activé
     if (debug_gyro) {
         Serial.println("=== Gyroscope Reset ===");
-        Serial.print("New Gyro Offset X: "); Serial.println(gyroOffsetX);
-        Serial.print("New Gyro Offset Y: "); Serial.println(gyroOffsetY);
+        Serial.print("Nouvel Offset X: "); Serial.println(gyroOffsetX);
+        Serial.print("Nouvel Offset Y: "); Serial.println(gyroOffsetY);
     }
 }

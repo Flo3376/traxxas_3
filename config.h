@@ -9,6 +9,55 @@
 //#define WIFI_SSID "NG_XR500_5GZ"
 //#define WIFI_PASSWORD "YsfW6wB89j6pkAB9C3jSef749H8cUV"
 
+/*======================*/
+//    Gestion du Gyro   //
+/*======================*/
+// Définition des broches I2C utilisées pour la communication avec le gyroscope (!!Ne pas modifier!!)
+const int I2C_SDA = 21;
+const int I2C_SCL = 22;
+
+// Valeurs par défaut pour l'initialisation des variables dynamiques
+// Ces offsets sont les corrections à appliquer pour compenser les erreurs de mesure
+// Ces valeurs ont été déterminées après l'installation du boîtier sur le véhicule et des tests préliminaires
+const float DEFAULT_GYRO_OFFSET_X = 2.1;
+const float DEFAULT_GYRO_OFFSET_Y = 2.7;
+const float DEFAULT_GYRO_OFFSET_Z = 0.0;
+
+// Offsets pour compenser l'effet de la gravité et l'orientation
+const float DEFAULT_ACCEL_OFFSET_X = 0.0;
+const float DEFAULT_ACCEL_OFFSET_Y = 0.0;
+const float DEFAULT_ACCEL_OFFSET_Z = -9.47;
+
+// Accélérations initiales mesurées, utilisées pour stabiliser la lecture au démarrage
+const float DEFAULT_AX = -0.66;
+const float DEFAULT_AY = -0.66;
+const float DEFAULT_AZ = 9.41;
+
+// Limites de déclenchement du capteur gyroscopique
+// Ces valeurs déterminent à partir de quel angle une alarme de basculement est déclenchée
+// Elles sont ajustées en fonction de l’installation du boîtier sur le 4x4
+const int DEFAULT_LIMIT_G_X = 25;
+const int DEFAULT_LIMIT_G_Y = 25;
+
+// Orientation du gyroscope dans le boîtier
+// Définit comment le capteur est positionné par rapport à l'axe longitudinal du 4x4
+// 0 = Orientation standard
+// 1 = Prise USB orientée à gauche
+// 2 = Prise USB orientée vers l’avant
+// 3 = Prise USB orientée à droite
+// 4 = Prise USB orientée vers l’arrière (configuration par défaut)
+const int DEFAULT_ORIENTATION_GYRO = 4;
+
+// Déclaration des variables globales (elles seront initialisées dans gyro.cpp)
+extern float gyroOffsetX, gyroOffsetY, gyroOffsetZ;
+extern float accelOffsetX, accelOffsetY, accelOffsetZ;
+extern float roll, pitch;
+extern float ax, ay, az;
+extern int limit_g_x, limit_g_y;
+extern int orientation_gyro;
+
+
+
 
 /*======================*/
 //  Gestion des Sorties //

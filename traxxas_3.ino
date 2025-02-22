@@ -861,10 +861,7 @@ void sendDataToSmartphone() {
 void handleMessage() {
 
   // Vérifie si la file d'attente contient un message
-  if (messageQueue.empty()) {
-
-    return;
-  }
+  if (messageQueue.empty()) return;
 
   // Récupérer le premier message de la file d'attente
   String message = messageQueue.front();
@@ -925,13 +922,7 @@ void handleMessage() {
       String command = doc["command"];
       Serial.println("Commande standard reçue : " + command);
 
-      if (command == "start") {
-        Serial.println("Démarrage de la simulation !");
-        //simulation.start();
-      } else if (command == "stop") {
-        Serial.println("Arrêt de la simulation !");
-        //simulation.stop();
-      } else if (command == "reset_gyro") {
+      if (command == "reset_gyro") {
         resetGyro();
       } else {
         Serial.println("Commande inconnue : " + command);
@@ -952,12 +943,14 @@ void handleMessage() {
         for (int i = 0; i < 3; i++) {  // 3 servos à parcourir
           if (servos[i] != nullptr && servos[i]->getPin() == pin) {
             servos[i]->jumpTo(position);  // Déplacement en 500ms
-            Serial.print("Mise à jour Servo Pin ");
-            Serial.print(pin);
-            Serial.print("  Mise à jour Servo ");
-            Serial.print(i);
-            Serial.print(" -> Position ");
-            Serial.println(position);
+            if(debug_output){
+              Serial.print("Mise à jour Servo Pin ");
+              Serial.print(pin);
+              Serial.print("  Mise à jour Servo ");
+              Serial.print(i);
+              Serial.print(" -> Position ");
+              Serial.println(position);
+            }
             break;
           }
         }

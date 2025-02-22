@@ -21,6 +21,9 @@ int prev_light_mod_data = 0;
 int light_mod_mode = 0; // Définition de la variable
 bool wifiSwitchLocked = false; // Verrouillage pour éviter les bascules multiples
 
+// Tableau global pour stocker les données des canaux
+int data_channels[6] = { 0, 0, 0, 0, 0, 0 };
+
 
 // Variables globales pour surveiller le throttle
 unsigned long last_activity_time = millis();
@@ -31,6 +34,7 @@ VehiculeMode last_vehicule_mode = WAIT; // Initialisé à NORMAL par défaut
 unsigned long lightModPressStart = 0;
 bool lightModLongPressDetected = false;
 
+// Surveille l'activité de l'accélérateur pour ajuster l'état du véhicule.
 void monitorThrottle() {
     int current_throttle = throttle_data; // Valeur actuelle du throttle
     unsigned long current_time = millis();
@@ -80,8 +84,7 @@ void monitorThrottle() {
     last_vehicule_mode = vehicule_mode;
 }
 
-
-// Implémentation des fonctions
+// Lit une impulsion PWM sur une broche donnée et la convertit en une valeur exploitable.
 int readPWM(int pin) {
 
   unsigned long pulseWidth = pulseIn(pin, HIGH, 20000);
@@ -103,6 +106,7 @@ int readPWM(int pin) {
   return 0;  // Retourner 0 si aucune valeur n'a été lue
 }
 
+// Gère le mode d'éclairage en fonction des interactions.
 void handleLightMod() {
     if (light_mod_data != prev_light_mod_data) {
         if (light_mod_data == 100) { // Bouton pressé
@@ -136,6 +140,28 @@ void handleLightMod() {
     }
 }
 
+// Met à jour les valeurs des canaux en lisant les signaux PWM.
+void updateChannels() {
+    data_channels[0] = readPWM(channel_1);
+    data_channels[1] = readPWM(channel_2);
+    data_channels[2] = readPWM(channel_3);
+    data_channels[3] = readPWM(channel_4);
+    data_channels[4] = readPWM(channel_5);
+    data_channels[5] = readPWM(channel_6);
+
+    steer_data = data_channels[steer];
+    throttle_data = data_channels[throttle];
+    brake_data = data_channels[brake];
+    gear_box_data = data_channels[gear_box];
+    front_diff_data = data_channels[front_diff];
+    rear_diff_data = data_channels[rear_diff];
+    light_data = data_channels[light];
+    winch_data = data_channels[winch];
+    horn_data = data_channels[horn];
+    light_mod_data = data_channels[light_mod];
+}
+
+/*
 void updateInputData() {
   // Associer les données des canaux aux rôles définis dans config.h
   steer_data = (steer != -1) ? getChannelData(steer) : 0;
@@ -153,9 +179,6 @@ void updateInputData() {
   handleLightMod();
 }
 
-// Tableau global pour stocker les données des canaux
-int data_channels[6] = { 0, 0, 0, 0, 0, 0 };
-
 void updateChannels() {
   data_channels[0] = readPWM(channel_1);
   data_channels[1] = readPWM(channel_2);
@@ -166,10 +189,10 @@ void updateChannels() {
 
   // Mise à jour des données spécifiques
   updateInputData();
-}
+}*/
 
 
-
+// Retourne la valeur actuelle d'un canal donné
 int getChannelData(int channel) {
   switch (channel) {
     case channel_1: return data_channels[0];
@@ -182,32 +205,13 @@ int getChannelData(int channel) {
   }
 }
 
+// Convertit le mode du véhicule en une chaîne de caractères.
 const char* vehiculeModeToString(VehiculeMode mode) {
     switch (mode) {
-        case NORMAL:
-            return "NORMAL";
-        case WAIT:
-            return "WAIT";
-        case FORGET:
-            return "FORGET";
-        case EXPO:
-            return "EXPO";
-        default:
-            return "UNKNOWN";
+        case NORMAL: return "NORMAL";
+        case WAIT: return "WAIT";
+        case FORGET: return "FORGET";
+        case EXPO: return "EXPO";
+        default: return "UNKNOWN";
     }
-}
-
-String generateServoJson() {
-  JsonDocument doc;
-  doc["type"] = "channels";
-  doc["Ch1"] = data_channels[0];
-  doc["Ch2"] = data_channels[1];
-  doc["Ch3"] = data_channels[2];
-  doc["Ch4"] = data_channels[3];
-  doc["Ch5"] = data_channels[4];
-  doc["Ch6"] = data_channels[5];
-
-  String jsonString;
-  serializeJson(doc, jsonString);
-  return jsonString;
 }

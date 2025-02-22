@@ -1,8 +1,6 @@
 #include "Ampoules.h"
 
-
-
-// Constructeur
+// Constructeur par défaut
 Ampoule::Ampoule() : pin(-1), etatBas(0), etatHaut(0), nom(""), methode(""),
                      tempsTransition(0), intervalCommutation(0), etat(false),
                      actif(false), forcerActif(false), valeurForcee(-1) {}
@@ -89,11 +87,10 @@ void Ampoule::stop() {
     digitalWrite(pin, LOW);
   }
 }
+// Retourne l'état actif
+bool Ampoule::get_actif() const {return actif;}
 
-bool Ampoule::get_actif() const {  // Ajout de 'const' ici aussi
-    return actif;
-}
-// Méthode forceOutput
+// Force une valeur spécifique pour la sortie
 void Ampoule::forceOutput(int valeur) {
   if (valeur < 0) {
     forcerActif = false;
@@ -105,10 +102,9 @@ void Ampoule::forceOutput(int valeur) {
   analogWrite(pin, valeur);
 }
 
-// Méthode update
+// Mise à jour en fonction du mode et de l'état de clignotement
 void Ampoule::update(bool blinkState) {
-  if (forcerActif) return;
-  if (!actif) return;
+  if (forcerActif || !actif) return;
 
   unsigned long currentMillis = millis();
 
@@ -116,7 +112,6 @@ void Ampoule::update(bool blinkState) {
     if (etat != blinkState) {  // Vérifiez si l'état doit changer
         etat = blinkState;
         analogWrite(pin, etat ? etatHaut : etatBas);
-        //Serial.println("CLI Update : " + etat);
       }
   }else if (methode == "BUZ") {
     if (etat != blinkState) {  // Vérifiez si l'état doit changer
@@ -128,30 +123,25 @@ void Ampoule::update(bool blinkState) {
     if (tempsTransition <= 0) {
       tempsTransition = 100;
     }
-
-    if (etat) {
-      analogWrite(pin, etatHaut);
-    } else {
-      analogWrite(pin, etatBas);
-    }
+    analogWrite(pin, etat ? etatHaut : etatBas);
   } 
   else if (methode == "TOR"){}
   else{Serial.println(nom + " mod inconnu " + methode);}
 }
 
-// Méthode getStatus
+// Retourne les informations sous forme de texte
 String Ampoule::getStatus() {
-  String status = "Nom: " + nom + ", Pin: " + String(pin);
-  status += ", Methode: " + methode + ", Etat: ";
-  status += etat ? "ON" : "OFF";
-  status += ", Actif: " + String(actif ? "Oui" : "Non");
-  status += ", Forcer: " + String(forcerActif ? "Oui" : "Non");
-  return status;
+    String status = "Nom: " + nom + ", Pin: " + String(pin);
+    status += ", Methode: " + methode + ", Etat: ";
+    status += etat ? "ON" : "OFF";
+    status += ", Actif: " + String(actif ? "Oui" : "Non");
+    status += ", Forcer: " + String(forcerActif ? "Oui" : "Non");
+    return status;
 }
 
+// Génère un JSON avec les infos de l'ampoule
 String Ampoule::getInfo() const {
     JsonDocument doc;
-
     doc["name"] = nom;
     doc["pin"] = pin;
     doc["etat_bas"] = etatBas;
