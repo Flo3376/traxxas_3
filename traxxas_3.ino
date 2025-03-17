@@ -351,7 +351,10 @@ void scenarioNormal() {
     clignotantGauche.run();
     clignotantDroit.run();
     if (!hp_sound) {
-      BUZZER_WARNING.run();  // Active le buzzer d'alarme
+      if(BUZZER_WARN_ACTV){
+        BUZZER_WARNING.run();  // Active le buzzer d'alarme
+      }
+      
     } else {
       servo1->jumpTo(180);
     }
@@ -503,7 +506,10 @@ void scenarioNormal() {
       third_brake.stop();
       brakes.stop();
       backward.run();  // Marche arrière directe
-      BUZZER_WARNING.run();
+      if(BUZZER_RVRS_ACTV){
+        BUZZER_WARNING.run();
+      }
+      
       if (debug_output) { Serial.println("Axial : Reculer"); }
     }
   } else {
@@ -549,7 +555,9 @@ void scenarioNormal() {
         third_brake.stop();
         brakes.stop();
         backward.run();
-        BUZZER_WARNING.run();
+        if(BUZZER_RVRS_ACTV){
+          BUZZER_WARNING.run();
+        }
         if (debug_output) { Serial.println("Traxxas : Reculer"); }
       }
     }

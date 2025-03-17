@@ -190,6 +190,8 @@ const int maxPulse = 2000;
 /*======================*/
 const bool hp_sound = false;
 const int hp_output = aux_serv_1;
+const bool BUZZER_WARN_ACTV = false;
+const bool BUZZER_RVRS_ACTV = false;
 
 /*======================*/
 //  Gestion des entrées //
